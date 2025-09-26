@@ -41,42 +41,94 @@ node scripts/seed_offers.js --count 10 --url http://localhost:3000
 ```bash
 npm test
 ```
-Tests cover signature verification, nonce rules, offer lifecycle, reservation flows, concurrency safety, and metrics reporting.
+Tests cover signature verification, nonce rules, offer lifecycle, reservation flows, concurrency safety, metrics reporting, and admin endpoints.
 
-## Key endpoints
+## API reference
+
+### Endpoint summary
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | `GET`  | `/health` | Liveness probe |
-| `POST` | `/offers` | Create/update a signed seller offer (nonce enforced) |
+| `POST` | `/offers` | Create or update a signed seller offer (nonce enforced) |
 | `GET`  | `/offers` | Filterable snapshot of active offers |
-| `GET`  | `/offers/:id` | Fetch single offer |
-| `PATCH` | `/offers/:id` | Signed update to available liquidity |
+| `GET`  | `/offers/:id` | Fetch a single offer |
+| `PATCH` | `/offers/:id` | Signed update of available liquidity |
 | `POST` | `/offers/:id/cancel` | Signed cancellation message |
 | `POST` | `/offers/:id/reserve` | Atomically reserve liquidity |
-| `POST` | `/reservations/:id/commit` | Mark reservation as committed |
+| `POST` | `/reservations/:id/commit` | Mark a reservation as committed |
 | `POST` | `/reservations/:id/release` | Release reservation and restore availability |
-| `GET` | `/admin/metrics` | Orderbook/reservation counters and timestamps |
+| `GET`  | `/admin/metrics` | Aggregate counters for monitoring |
 
-### Sample requests
+### Detailed examples
+
+#### `GET /health`
 ```bash
-# Health
 curl http://localhost:3000/health
+```
 
-# Create an offer (payload must be signed)
+#### `POST /offers`
+Payload must be signed using the canonical ordering defined in `src/services/signature.js`.
+```bash
 curl -X POST http://localhost:3000/offers \
   -H 'Content-Type: application/json' \
-  -d @fixtures/sample_offer.json
+  -d @demo/post_offer_request.json
+```
 
-# Fetch offers sorted by best rate
-curl 'http://localhost:3000/offers?limit=20&sort=rate_desc'
+#### `GET /offers`
+```bash
+curl 'http://localhost:3000/offers?chain=polygon&token=PYUSD&limit=20&sort=rate_desc' \
+  | jq '.'
+```
 
-# Reserve 50 PYUSD on an offer
+#### `GET /offers/:id`
+```bash
+curl http://localhost:3000/offers/<offer_id> | jq '.'
+```
+
+#### `PATCH /offers/:id`
+```bash
+curl -X PATCH http://localhost:3000/offers/<offer_id> \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "seller_pubkey": "0x...",
+        "available_pyusd": "350",
+        "nonce": "5",
+        "signature": "0x..."
+      }'
+```
+
+#### `POST /offers/:id/cancel`
+```bash
+curl -X POST http://localhost:3000/offers/<offer_id>/cancel \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "seller_pubkey": "0x...",
+        "nonce": "6",
+        "signature": "0x..."
+      }'
+```
+
+#### `POST /offers/:id/reserve`
+```bash
 curl -X POST http://localhost:3000/offers/<offer_id>/reserve \
   -H 'Content-Type: application/json' \
-  -d '{"amount_pyusd": "50"}'
+  -d '{"amount_pyusd": "75"}'
+```
+Successful responses include a `reservation_id` and the remaining liquidity.
 
-# Inspect metrics
-curl http://localhost:3000/admin/metrics
+#### `POST /reservations/:id/commit`
+```bash
+curl -X POST http://localhost:3000/reservations/<reservation_id>/commit
+```
+
+#### `POST /reservations/:id/release`
+```bash
+curl -X POST http://localhost:3000/reservations/<reservation_id>/release
+```
+
+#### `GET /admin/metrics`
+```bash
+curl http://localhost:3000/admin/metrics | jq '.'
 ```
 
 ## Configuration
