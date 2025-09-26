@@ -1,11 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { RouteRequest, RouteResponse, MatchedOffer } from '../core/types';
 import { fetchOffers } from '../db/offers.repo';
-import { reserveOffer, commitReservation, releaseReservation } from '../db/reservations.repo';
 import { rankOffers } from './ranker';
 import { allocateOffers } from './allocator';
-import { sendPyusdTransfers } from '../chain/polygon';
-import { triggerPayout } from '../payout/upi.mock';
 import { logger } from '../utils/logger';
 import { config } from '../core/config';
 
@@ -41,50 +38,19 @@ export async function routePayment(request: RouteRequest): Promise<RouteResponse
   }
 
   const matched: MatchedOffer[] = [];
-  const payouts: RouteResponse['seller_payouts'] = [];
-  const transfers: RouteResponse['onchain_transfers'] = [];
-
   for (const chunk of allocation.allocations) {
-    let reservationId: string | null = null;
-    try {
-      const reservation = await reserveOffer(chunk.offer.id, chunk.amount_pyusd);
-      reservationId = reservation.reservation_id;
-      const txHash = await sendPyusdTransfers([
-        { to: chunk.offer.seller_pubkey, amount: chunk.amount_pyusd },
-      ]);
-      await commitReservation(reservation.reservation_id);
-      const payoutRef = await triggerPayout({
-        reservationId: reservation.reservation_id,
-        sellerPubkey: chunk.offer.seller_pubkey,
-        amountInr: chunk.expected_inr,
-        txHash,
-      });
-
-      transfers.push({ to: chunk.offer.seller_pubkey, amount_pyusd: chunk.amount_pyusd, tx_hash: txHash });
-      payouts.push({ seller_pubkey: chunk.offer.seller_pubkey, reservation_id: reservation.reservation_id, payout_reference: payoutRef });
-      matched.push({
-        offer_id: chunk.offer.id,
-        seller_pubkey: chunk.offer.seller_pubkey,
-        token: chunk.offer.token,
-        chain: chunk.offer.chain,
-        rate: Number(chunk.offer.rate_pyusd_per_inr),
-        fee_pct: Number(chunk.offer.fee_pct),
-        reserved_pyusd: chunk.amount_pyusd,
-        expected_inr: chunk.expected_inr,
-        reservation_id: reservation.reservation_id,
-        est_latency_ms: chunk.offer.est_latency_ms,
-      });
-    } catch (error) {
-      logger.error({ error, auditId, offerId: chunk.offer.id }, 'Reservation workflow failed');
-      if (reservationId) {
-        try {
-          await releaseReservation(reservationId);
-        } catch (releaseError) {
-          logger.error({ releaseError, reservationId }, 'Failed to release reservation');
-        }
-      }
-      throw error;
-    }
+    matched.push({
+      offer_id: chunk.offer.id,
+      seller_pubkey: chunk.offer.seller_pubkey,
+      token: chunk.offer.token,
+      chain: chunk.offer.chain,
+      rate: Number(chunk.offer.rate_pyusd_per_inr),
+      fee_pct: Number(chunk.offer.fee_pct),
+      reserved_pyusd: chunk.amount_pyusd,
+      expected_inr: chunk.expected_inr,
+      reservation_id: 'pending',
+      est_latency_ms: chunk.offer.est_latency_ms,
+    });
   }
 
   const weightedLatency = matched.length
@@ -100,7 +66,7 @@ export async function routePayment(request: RouteRequest): Promise<RouteResponse
       total_inr_estimated: allocation.total_inr,
       weighted_latency_ms: weightedLatency,
     },
-    onchain_transfers: transfers,
-    seller_payouts: payouts,
+    onchain_transfers: [],
+    seller_payouts: [],
   };
 }
