@@ -393,3 +393,43 @@ describe('Reservations API', () => {
     expect(rows[0].available_pyusd).toBe('20.00000000');
   });
 });
+
+describe('Admin metrics', () => {
+  test('reports offer and reservation counts', async () => {
+    const offerOne = buildOffer({ nonce: 1, available_pyusd: '500', max_pyusd: '600' });
+    const signatureOne = await signOffer(offerOne);
+    await request(app)
+      .post('/offers')
+      .send({ ...offerOne, signature: signatureOne })
+      .expect(201);
+
+    const offerTwo = buildOffer({
+      seller_pubkey: secondWallet.address,
+      nonce: 1,
+      available_pyusd: '300',
+      max_pyusd: '400',
+    });
+    const signatureTwo = await signOffer(offerTwo, secondWallet);
+    const createTwo = await request(app)
+      .post('/offers')
+      .send({ ...offerTwo, signature: signatureTwo })
+      .expect(201);
+
+    await request(app)
+      .post(`/offers/${createTwo.body.id}/reserve`)
+      .send({ amount_pyusd: '100' })
+      .expect(201);
+
+    const metricsResponse = await request(app)
+      .get('/admin/metrics')
+      .expect(200);
+
+    expect(metricsResponse.body.offers.total).toBe(2);
+    expect(metricsResponse.body.offers.active).toBe(2);
+    expect(metricsResponse.body.reservations.total).toBe(1);
+    expect(metricsResponse.body.reservations.pending).toBe(1);
+    expect(metricsResponse.body.offers.active_liquidity_pyusd).toBeCloseTo(700, 5);
+    expect(metricsResponse.body.offers.last_updated).toBeTruthy();
+    expect(metricsResponse.body.service.timestamp).toBeTruthy();
+  });
+});
