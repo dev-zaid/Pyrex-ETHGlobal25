@@ -210,6 +210,10 @@ docker run -p 3000:3000 --env-file .env pyrex-orderbook
 - Implement health checks
 - Add metrics and monitoring
 
+## 📚 Documentation
+
+- See `planning/Pyrex-Planning-Pack.md` for implementation details, DB schema, and seed guidance.
+
 ## 🤝 Contributing
 
 1. Fork the repository
