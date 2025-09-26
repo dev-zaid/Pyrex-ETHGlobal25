@@ -10,6 +10,25 @@ function sanitizeOfferRow(row) {
   return rest;
 }
 
+function sanitizeReservationRow(row) {
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    offer_id: row.offer_id,
+    amount_pyusd: formatFixed(row.amount_pyusd, 8),
+    status: row.status,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function formatUnitsFixed(units, decimals) {
+  const value = ethers.formatUnits(units, decimals);
+  return formatFixed(value, decimals);
+}
+
 async function createOrUpdateOffer(offer, signature) {
   const client = await pool.connect();
   const expiryValue = offer.expiry_timestamp ? new Date(offer.expiry_timestamp) : null;
@@ -336,6 +355,182 @@ async function cancelOffer(offerId, nonce, signature, seller_pubkey) {
   }
 }
 
+async function reserveOffer(offerId, amount) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const offerResult = await client.query('SELECT * FROM offers WHERE id = $1 FOR UPDATE', [offerId]);
+    if (offerResult.rowCount === 0) {
+      const err = new Error('Offer not found');
+      err.status = 404;
+      throw err;
+    }
+
+    const offer = offerResult.rows[0];
+    if (offer.status !== 'active') {
+      const err = new Error('Offer is not active');
+      err.status = 409;
+      throw err;
+    }
+
+    const amountFixed = formatFixed(amount, 8);
+    const amountUnits = ethers.parseUnits(amountFixed, 8);
+    if (amountUnits <= 0n) {
+      const err = new Error('Reservation amount must be greater than 0');
+      err.status = 400;
+      throw err;
+    }
+
+    const availableUnits = ethers.parseUnits(formatFixed(offer.available_pyusd, 8), 8);
+    if (availableUnits < amountUnits) {
+      const err = new Error('Insufficient available liquidity for reservation');
+      err.status = 409;
+      throw err;
+    }
+
+    const newAvailableUnits = availableUnits - amountUnits;
+    const newAvailable = formatUnitsFixed(newAvailableUnits, 8);
+
+    const reservationResult = await client.query(
+      `INSERT INTO reservations (offer_id, amount_pyusd, status)
+       VALUES ($1, $2, 'pending')
+       RETURNING *`,
+      [offerId, amountFixed]
+    );
+
+    await client.query(
+      `UPDATE offers
+       SET available_pyusd = $1,
+           updated_at = now()
+       WHERE id = $2`,
+      [newAvailable, offerId]
+    );
+
+    await client.query('COMMIT');
+    return {
+      reservation: sanitizeReservationRow(reservationResult.rows[0]),
+      remaining_available: newAvailable,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function commitReservation(reservationId) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const reservationResult = await client.query(
+      'SELECT * FROM reservations WHERE id = $1 FOR UPDATE',
+      [reservationId]
+    );
+
+    if (reservationResult.rowCount === 0) {
+      const err = new Error('Reservation not found');
+      err.status = 404;
+      throw err;
+    }
+
+    const reservation = reservationResult.rows[0];
+    if (reservation.status === 'committed') {
+      await client.query('COMMIT');
+      return sanitizeReservationRow(reservation);
+    }
+
+    if (reservation.status !== 'pending') {
+      const err = new Error('Reservation is not pending');
+      err.status = 409;
+      throw err;
+    }
+
+    const updateResult = await client.query(
+      `UPDATE reservations
+       SET status = 'committed',
+           updated_at = now()
+       WHERE id = $1
+       RETURNING *`,
+      [reservationId]
+    );
+
+    await client.query('COMMIT');
+    return sanitizeReservationRow(updateResult.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function releaseReservation(reservationId) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const reservationResult = await client.query(
+      'SELECT * FROM reservations WHERE id = $1 FOR UPDATE',
+      [reservationId]
+    );
+
+    if (reservationResult.rowCount === 0) {
+      const err = new Error('Reservation not found');
+      err.status = 404;
+      throw err;
+    }
+
+    const reservation = reservationResult.rows[0];
+    if (reservation.status !== 'pending') {
+      const err = new Error('Reservation cannot be released');
+      err.status = 409;
+      throw err;
+    }
+
+    const offerResult = await client.query('SELECT * FROM offers WHERE id = $1 FOR UPDATE', [reservation.offer_id]);
+    if (offerResult.rowCount === 0) {
+      const err = new Error('Offer not found for reservation');
+      err.status = 404;
+      throw err;
+    }
+
+    const offer = offerResult.rows[0];
+
+    const amountUnits = ethers.parseUnits(formatFixed(reservation.amount_pyusd, 8), 8);
+    const availableUnits = ethers.parseUnits(formatFixed(offer.available_pyusd, 8), 8);
+    const newAvailableUnits = availableUnits + amountUnits;
+    const newAvailable = formatUnitsFixed(newAvailableUnits, 8);
+
+    await client.query(
+      `UPDATE offers
+       SET available_pyusd = $1,
+           updated_at = now()
+       WHERE id = $2`,
+      [newAvailable, reservation.offer_id]
+    );
+
+    const updateResult = await client.query(
+      `UPDATE reservations
+       SET status = 'released',
+           updated_at = now()
+       WHERE id = $1
+       RETURNING *`,
+      [reservationId]
+    );
+
+    await client.query('COMMIT');
+    return sanitizeReservationRow(updateResult.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   createOrUpdateOffer,
   sanitizeOfferRow,
@@ -343,4 +538,8 @@ module.exports = {
   getOfferById,
   updateAvailableAmount,
   cancelOffer,
+  reserveOffer,
+  commitReservation,
+  releaseReservation,
+  sanitizeReservationRow,
 };

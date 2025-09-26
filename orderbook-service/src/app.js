@@ -1,5 +1,6 @@
 const express = require('express');
 const offersRouter = require('./routes/offers');
+const reservationsRouter = require('./routes/reservations');
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/offers', offersRouter);
+app.use('/reservations', reservationsRouter);
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {

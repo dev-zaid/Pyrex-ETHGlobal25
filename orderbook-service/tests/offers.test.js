@@ -8,7 +8,7 @@ const db = require('../src/db');
 const { canonicalizeOffer, hashCanonicalString, canonicalizeCancel } = require('../src/services/signature');
 
 const truncateOffers = async () => {
-  await db.query('TRUNCATE TABLE offers RESTART IDENTITY');
+  await db.query('TRUNCATE TABLE reservations, offers RESTART IDENTITY');
 };
 
 const wallet = new ethers.Wallet(
@@ -316,5 +316,80 @@ describe('PATCH /offers/:id', () => {
 
     expect(response.status).toBe(409);
     expect(response.body.error).toMatch(/nonce/i);
+  });
+});
+
+describe('Reservations API', () => {
+  test('reserves, commits, and releases amounts', async () => {
+    const offer = buildOffer({ nonce: 1, available_pyusd: '400', max_pyusd: '500' });
+    const signature = await signOffer(offer);
+    const createResponse = await request(app)
+      .post('/offers')
+      .send({ ...offer, signature })
+      .expect(201);
+
+    const offerId = createResponse.body.id;
+
+    const reserveResponse = await request(app)
+      .post(`/offers/${offerId}/reserve`)
+      .send({ amount_pyusd: '150' })
+      .expect(201);
+
+    expect(reserveResponse.body.amount_pyusd).toBe('150.00000000');
+
+    const reservationId = reserveResponse.body.reservation_id;
+
+    const commitResponse = await request(app)
+      .post(`/reservations/${reservationId}/commit`)
+      .expect(200);
+
+    expect(commitResponse.body.status).toBe('committed');
+
+    const secondReserve = await request(app)
+      .post(`/offers/${offerId}/reserve`)
+      .send({ amount_pyusd: '100' })
+      .expect(201);
+
+    const secondReservationId = secondReserve.body.reservation_id;
+
+    const releaseResponse = await request(app)
+      .post(`/reservations/${secondReservationId}/release`)
+      .expect(200);
+
+    expect(releaseResponse.body.status).toBe('released');
+
+    const { rows } = await db.query('SELECT available_pyusd FROM offers WHERE id = $1', [offerId]);
+    expect(rows[0].available_pyusd).toBe('250.00000000');
+  });
+
+  test('blocks concurrent reservations exceeding availability', async () => {
+    const offer = buildOffer({ nonce: 1, available_pyusd: '100', max_pyusd: '100' });
+    const signature = await signOffer(offer);
+    const createResponse = await request(app)
+      .post('/offers')
+      .send({ ...offer, signature })
+      .expect(201);
+
+    const offerId = createResponse.body.id;
+
+    const reserveOne = request(app)
+      .post(`/offers/${offerId}/reserve`)
+      .send({ amount_pyusd: '80' });
+    const reserveTwo = request(app)
+      .post(`/offers/${offerId}/reserve`)
+      .send({ amount_pyusd: '40' });
+
+    const [resultA, resultB] = await Promise.allSettled([reserveOne, reserveTwo]);
+
+    const successes = [resultA, resultB].filter((result) => result.status === 'fulfilled' && result.value.status === 201);
+    const conflicts = [resultA, resultB].filter((result) =>
+      result.status === 'fulfilled' && result.value.status === 409
+    );
+
+    expect(successes).toHaveLength(1);
+    expect(conflicts).toHaveLength(1);
+
+    const { rows } = await db.query('SELECT available_pyusd FROM offers WHERE id = $1', [offerId]);
+    expect(rows[0].available_pyusd).toBe('20.00000000');
   });
 });

@@ -60,6 +60,26 @@ router.post('/', rateLimiter, async (req, res, next) => {
   }
 });
 
+router.post('/:id/reserve', rateLimiter, async (req, res, next) => {
+  try {
+    const { amount_pyusd } = req.body || {};
+    if (amount_pyusd === undefined || amount_pyusd === null) {
+      return res.status(400).json({ error: 'amount_pyusd is required' });
+    }
+
+    const result = await offersService.reserveOffer(req.params.id, amount_pyusd);
+    return res.status(201).json({
+      reservation_id: result.reservation.id,
+      offer_id: result.reservation.offer_id,
+      amount_pyusd: result.reservation.amount_pyusd,
+      status: result.reservation.status,
+      remaining_available_pyusd: result.remaining_available,
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 router.post('/:id/cancel', rateLimiter, async (req, res, next) => {
   try {
     const { signature, nonce, seller_pubkey } = req.body || {};
