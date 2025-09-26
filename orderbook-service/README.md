@@ -1,234 +1,122 @@
-# Pyrex - Orderbook Service
+# FX Bridge Orderbook Service
 
-A Node.js microservice for managing seller orderbooks in the Pyrex ecosystem. This service handles PYUSD to INR offers with cryptographic signature verification and PostgreSQL persistence.
+Node.js + Express microservice providing a cryptographically verifiable seller orderbook backed by PostgreSQL. Sellers POST signed PYUSD offers, consumers fetch filtered orderbook snapshots, and routers can reserve liquidity atomically.
 
-## 🚀 Quick Start
+## Requirements
+- Node.js 18+ (LTS) and npm
+- Docker & Docker Compose
+- Local Postgres connection available at `postgres://fxbridge:fxbridge_pass@localhost:5432/fxbridge_db`
 
-### Prerequisites
-
-- Node.js 18+ (LTS recommended)
-- Docker and Docker Compose
-- PostgreSQL 15+
-
-### Installation
-
-1. **Clone and setup**
-   ```bash
-   git clone <repository-url>
-   cd pyrex/orderbook-service
-   npm install
-   ```
-
-2. **Start the database**
-   ```bash
-   cd ../database
-   docker compose up -d
-   ```
-
-3. **Run migrations**
-   ```bash
-   psql postgres://pyrex:pyrex_pass@localhost:5432/pyrex_db -f migrations/001_create_orderbook.sql
-   ```
-
-4. **Start the service**
-   ```bash
-   cd ../orderbook-service
-   npm start
-   ```
-
-The service will be available at `http://localhost:3000`
-
-## 📋 API Endpoints
-
-### POST /offers
-Create or update a seller offer.
-
-**Request Body:**
-```json
-{
-  "seller_pubkey": "0x742d35Cc6634C0532925a3b8D0C0C1b2C3D4E5F6",
-  "chain": "polygon",
-  "token": "PYUSD",
-  "rate_pyusd_per_inr": "0.01234",
-  "min_pyusd": "10.0",
-  "max_pyusd": "1000.0",
-  "available_pyusd": "500.0",
-  "fee_pct": "0.002",
-  "est_latency_ms": 12000,
-  "supports_swap": true,
-  "upi_enabled": true,
-  "nonce": 1,
-  "expiry_timestamp": "2025-06-01T00:00:00Z",
-  "signature": "0x1234..."
-}
+## 1. Boot the database
+```bash
+cd database
+docker compose up -d
+# apply migrations
+PGPASSWORD=fxbridge_pass psql -h localhost -U fxbridge -d fxbridge_db \
+  -f migrations/001_create_orderbook.sql
+PGPASSWORD=fxbridge_pass psql -h localhost -U fxbridge -d fxbridge_db \
+  -f migrations/002_create_reservations.sql
 ```
 
-**Response:** `201 Created` with the stored offer record.
-
-### GET /offers
-Fetch orderbook snapshot with optional filters.
-
-**Query Parameters:**
-- `chain` - Blockchain (default: polygon)
-- `token` - Token symbol (default: PYUSD)
-- `min_amount` - Minimum PYUSD amount
-- `max_amount` - Maximum PYUSD amount
-- `limit` - Maximum number of offers
-- `sort` - Sort by `rate` or `latency`
-
-**Response:** `200 OK` with offers array and count.
-
-### GET /offers/:id
-Fetch a single offer by ID.
-
-**Response:** `200 OK` with offer details or `404 Not Found`.
-
-### POST /offers/:id/cancel
-Cancel an offer (requires signature verification).
-
-**Request Body:**
-```json
-{
-  "signature": "0x1234..."
-}
+## 2. Install & run the service
+```bash
+cd ../orderbook-service
+npm install
+# start in dev mode with auto-reload
+npm run dev
+# or production style
+database_url=postgres://fxbridge:fxbridge_pass@localhost:5432/fxbridge_db npm start
 ```
 
-## 🔐 Signature Verification
+The API listens on `http://localhost:3000` by default. Request/response logs are emitted via `morgan` (muted during tests).
 
-All offers must be cryptographically signed by the seller. The service uses ECDSA signatures over a canonical JSON representation.
-
-### Canonical Format
-Fields must be ordered as:
+## 3. Seed sample offers (optional)
+```bash
+# in orderbook-service/
+node scripts/seed_offers.js --count 10 --url http://localhost:3000
+# snapshot written to snapshots/offers_snapshot.json
 ```
-[seller_pubkey, chain, token, rate_pyusd_per_inr, min_pyusd, max_pyusd, available_pyusd, fee_pct, est_latency_ms, supports_swap, upi_enabled, nonce, expiry_timestamp]
-```
 
-### Signing Process
-1. Create canonical JSON string with exact field ordering
-2. Compute Keccak256 hash of UTF-8 bytes
-3. Sign the hash with seller's private key
-4. Include signature in offer payload
-
-## 🗄️ Database Schema
-
-### Offers Table
-- `id` - UUID primary key
-- `seller_pubkey` - Seller's public key (66 chars)
-- `chain` - Blockchain identifier
-- `token` - Token symbol
-- `rate_pyusd_per_inr` - Exchange rate (18 decimals)
-- `min_pyusd` - Minimum trade size (8 decimals)
-- `max_pyusd` - Maximum trade size (8 decimals)
-- `available_pyusd` - Available liquidity (8 decimals)
-- `fee_pct` - Fee percentage (6 decimals)
-- `est_latency_ms` - Estimated settlement time
-- `supports_swap` - Whether swap is supported
-- `upi_enabled` - Whether UPI is enabled
-- `status` - Offer status (active/paused/cancelled/expired)
-- `nonce` - Replay protection counter
-- `expiry_timestamp` - Offer expiration
-- `signature` - Cryptographic signature
-- `created_at` - Creation timestamp
-- `updated_at` - Last update timestamp
-
-## 🧪 Testing
-
-Run the test suite:
+## 4. Run the test suite
 ```bash
 npm test
 ```
+Tests cover signature verification, nonce rules, offer lifecycle, reservation flows, concurrency safety, and metrics reporting.
 
-Tests include:
-- Signature verification (valid/invalid)
-- Nonce replay protection
-- Offer lifecycle (create/fetch/cancel)
-- API endpoint validation
-- Database operations
+## Key endpoints
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| `GET`  | `/health` | Liveness probe |
+| `POST` | `/offers` | Create/update a signed seller offer (nonce enforced) |
+| `GET`  | `/offers` | Filterable snapshot of active offers |
+| `GET`  | `/offers/:id` | Fetch single offer |
+| `PATCH` | `/offers/:id` | Signed update to available liquidity |
+| `POST` | `/offers/:id/cancel` | Signed cancellation message |
+| `POST` | `/offers/:id/reserve` | Atomically reserve liquidity |
+| `POST` | `/reservations/:id/commit` | Mark reservation as committed |
+| `POST` | `/reservations/:id/release` | Release reservation and restore availability |
+| `GET` | `/admin/metrics` | Orderbook/reservation counters and timestamps |
 
-## 🌱 Seeding Data
-
-Populate the orderbook with test data:
-
+### Sample requests
 ```bash
-# Seed offers
-node scripts/seed_offers.js seed
+# Health
+curl http://localhost:3000/health
 
-# List current offers
-node scripts/seed_offers.js list
+# Create an offer (payload must be signed)
+curl -X POST http://localhost:3000/offers \
+  -H 'Content-Type: application/json' \
+  -d @fixtures/sample_offer.json
+
+# Fetch offers sorted by best rate
+curl 'http://localhost:3000/offers?limit=20&sort=rate_desc'
+
+# Reserve 50 PYUSD on an offer
+curl -X POST http://localhost:3000/offers/<offer_id>/reserve \
+  -H 'Content-Type: application/json' \
+  -d '{"amount_pyusd": "50"}'
+
+# Inspect metrics
+curl http://localhost:3000/admin/metrics
 ```
 
-## 🔧 Configuration
+## Configuration
+| Variable | Default | Notes |
+| -------- | ------- | ----- |
+| `DATABASE_URL` | `postgres://fxbridge:fxbridge_pass@localhost:5432/fxbridge_db` | pg connection string |
+| `PORT` | `3000` | HTTP port |
+| `NODE_ENV` | `development` | Enables logging & rate limiting (bypassed during tests) |
+| `ORDERBOOK_URL` | `http://localhost:3000` | Used by `scripts/seed_offers.js` |
 
-Environment variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `PORT` - Server port (default: 3000)
-- `NODE_ENV` - Environment (development/production)
-
-## 📊 Monitoring
-
-The service includes:
-- Rate limiting on POST endpoints
-- Comprehensive error handling
-- Request/response logging
-- Database connection pooling
-
-## 🏗️ Architecture
-
+## Project layout
 ```
 orderbook-service/
 ├── src/
-│   ├── app.js              # Express app setup
-│   ├── server.js           # Server startup
-│   ├── db.js               # Database connection
+│   ├── app.js                # Express app + middleware
+│   ├── server.js             # Server bootstrap
+│   ├── db.js                 # pg Pool helper
+│   ├── middleware/rateLimiter.js
 │   ├── routes/
-│   │   └── offers.js       # API endpoints
+│   │   ├── offers.js
+│   │   ├── reservations.js
+│   │   └── admin.js
 │   ├── services/
-│   │   ├── offersService.js # Database operations
-│   │   └── signature.js    # Signature verification
-│   ├── middleware/
-│   │   └── rateLimiter.js  # Rate limiting
-│   └── validators/
-│       └── offerValidator.js # Input validation
-├── tests/                  # Test suite
-├── scripts/                # Utility scripts
-├── fixtures/               # Test data
+│   │   ├── offersService.js
+│   │   └── signature.js
+│   └── validators/offerValidator.js
+├── scripts/seed_offers.js
+├── fixtures/seed_offers.json
+├── snapshots/offers_snapshot.json
+├── tests/
 └── package.json
 ```
 
-## 🚀 Deployment
+## Operational notes
+- Rate limiting guards mutating endpoints (`POST`, `PATCH`) outside of test runs.
+- Offer signatures follow the canonical ordering defined in the planning pack; verification uses `ethers`.
+- Reservations reduce `available_pyusd` within a transaction and can be committed or released for router workflows.
+- `/admin/metrics` surfaces aggregate counts for dashboards or Prometheus exporters.
 
-### Docker
-```bash
-docker build -t pyrex-orderbook .
-docker run -p 3000:3000 --env-file .env pyrex-orderbook
-```
-
-### Production Considerations
-- Use HTTPS in production
-- Configure proper CORS policies
-- Set up database connection pooling
-- Implement health checks
-- Add metrics and monitoring
-
-## 📚 Documentation
-
-- See `planning/Pyrex-Planning-Pack.md` for implementation details, DB schema, and seed guidance.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
-
-## 📄 License
-
-ISC License - see LICENSE file for details.
-
-## 🆘 Support
-
-For issues and questions:
-- Check the test suite for usage examples
-- Review the API documentation above
-- Open an issue in the repository
+## Next steps
+- Add authentication/authorization for seller and router identities.
+- Integrate structured logging + metrics export (e.g., Prometheus) for production usage.
+- Extend router logic to consume the seeded offers snapshot and simulate allocations.

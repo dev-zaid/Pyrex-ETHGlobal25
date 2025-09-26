@@ -1,0 +1,16 @@
+{
+  "seller_pubkey": "0x0A89f9b0240aCeae29f6887e38425Aab3B12f0d8",
+  "chain": "polygon",
+  "token": "PYUSD",
+  "rate_pyusd_per_inr": "0.012345678912345678",
+  "min_pyusd": "50.00000000",
+  "max_pyusd": "300.00000000",
+  "available_pyusd": "250.00000000",
+  "fee_pct": "0.001800",
+  "est_latency_ms": 9000,
+  "supports_swap": true,
+  "upi_enabled": true,
+  "nonce": "1",
+  "expiry_timestamp": "2025-09-26T23:22:04.268Z",
+  "signature": "0x4d36b18ca7f7147b04375d20d7722d8cb37c1a3ccc1f2e75897af795506f810076dbc2b4d107e4c5e9a69f0a063a58afe3f31eeb73a5dda67843938efa289fd11b"
+}

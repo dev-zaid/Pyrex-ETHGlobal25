@@ -1,7 +1,14 @@
 const express = require('express');
+const morgan = require('morgan');
 const offersRouter = require('./routes/offers');
+const reservationsRouter = require('./routes/reservations');
+const adminRouter = require('./routes/admin');
 
 const app = express();
+
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
+}
 
 app.use(express.json());
 
@@ -10,6 +17,8 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/offers', offersRouter);
+app.use('/reservations', reservationsRouter);
+app.use('/admin', adminRouter);
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
