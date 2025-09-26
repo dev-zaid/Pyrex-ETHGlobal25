@@ -1,5 +1,5 @@
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgres://pyrex:pyrex_pass@localhost:5432/pyrex_db';
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgres://fxbridge:fxbridge_pass@localhost:5432/fxbridge_db';
 
 const request = require('supertest');
 const { ethers } = require('ethers');
