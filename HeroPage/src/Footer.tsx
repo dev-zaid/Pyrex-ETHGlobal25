@@ -18,27 +18,12 @@ const FooterText = styled.p`
   margin: 0;
 `;
 
-const SocialIcons = styled.div`
-  margin-top: 10px;
-`;
-
-const SocialIcon = styled.a`
-  color: #bbb;
-  font-size: 20px;
-  margin: 0 15px;
-  text-decoration: none;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: #58a6ff;
-  }
-`;
 
 const Footer = () => {
   return (
     <FooterContainer>
       <FooterText>&copy; 2025 PyREX. All rights reserved.</FooterText>
-      <div>Developed with Curiosity by</div>
+      <div className="my-2">Developed with Curiosity by</div>
       <div>Archismaan Das | Ankush Dutta | Mohd Zaid | Ank Agarwal</div>
     </FooterContainer>
   );

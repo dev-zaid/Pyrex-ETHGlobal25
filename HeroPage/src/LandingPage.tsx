@@ -3,8 +3,9 @@ import { Hero } from "./Hero";
 import UserPage from "./UserPage";
 import { TimelinePage } from "./Timeline";
 import Seller from "./Seller";
-import { Future } from "./Future";
+// import { Future } from "./Future";
 import Footer from "./Footer";
+import FeatureFaqTabs from "./FeatureFaqTabs";
 
 export function LandingPage() {
   return (
@@ -14,7 +15,7 @@ export function LandingPage() {
       <UserPage />
       <TimelinePage />
       <Seller />
-      <Future />
+      <FeatureFaqTabs />
       <Footer />
     </>
   );

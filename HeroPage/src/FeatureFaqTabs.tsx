@@ -12,7 +12,7 @@ const FeatureFaqTabs = () => {
           <button
             type="button"
             onClick={() => setActiveTab("features")}
-            className={`transition-colors hover:text-white ${
+            className={`transition-colors hover:text-white text-3xl ${
               activeTab === "features" ? "text-white" : "text-white/50"
             }`}
           >
@@ -22,7 +22,7 @@ const FeatureFaqTabs = () => {
           <button
             type="button"
             onClick={() => setActiveTab("faq")}
-            className={`transition-colors hover:text-white ${
+            className={`transition-colors text-3xl hover:text-white ${
               activeTab === "faq" ? "text-white" : "text-white/50"
             }`}
           >
@@ -34,7 +34,10 @@ const FeatureFaqTabs = () => {
           {activeTab === "features" ? (
             <Future showHeading={false} className="bg-transparent py-0" />
           ) : (
-            <FAQ showHeading={false} className="min-h-0 bg-transparent px-0 py-0" />
+            <FAQ
+              showHeading={false}
+              className="min-h-0 bg-transparent px-0 py-0"
+            />
           )}
         </div>
       </div>
