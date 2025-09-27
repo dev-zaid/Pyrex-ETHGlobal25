@@ -109,6 +109,9 @@ export default function VendorDashboardScreen() {
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
   const [isCreatingPaypalOrder, setIsCreatingPaypalOrder] = useState(false);
 
+  // UTR verification state
+  const [utrClickCount, setUtrClickCount] = useState(0);
+
   const formattedAmount = useMemo(() => {
     const parsed = Number(amountInput);
     if (!isFinite(parsed) || parsed <= 0) {
@@ -205,7 +208,10 @@ export default function VendorDashboardScreen() {
     }
   };
 
-  const closeQrModal = () => setIsQrModalVisible(false);
+  const closeQrModal = () => {
+    setIsQrModalVisible(false);
+    setUtrClickCount(0); // Reset UTR verification state
+  };
 
   const handleSaveUpi = () => {
     const validation = validateUpiId(upiId);
@@ -224,6 +230,28 @@ export default function VendorDashboardScreen() {
     setIsEditingUpi(true);
     setUpiStatus(null);
     setUpiSaved(false);
+  };
+
+  const handleUtrVerification = () => {
+    if (utrClickCount === 0) {
+      setUtrClickCount(1);
+      // After 3 seconds, automatically move to processed state
+      setTimeout(() => {
+        setUtrClickCount(2);
+      }, 3000);
+    }
+  };
+
+  const getUtrButtonText = () => {
+    if (utrClickCount === 0) return 'Verify UTR Number';
+    if (utrClickCount === 1) return 'Verifying...';
+    return 'UTR Number Processed';
+  };
+
+  const getUtrButtonIcon = () => {
+    if (utrClickCount === 0) return 'search';
+    if (utrClickCount === 1) return 'clock';
+    return 'check-circle';
   };
 
   return (
@@ -510,6 +538,36 @@ export default function VendorDashboardScreen() {
                 )}
               </View>
             </View>
+            
+            {/* UTR Verification Button */}
+            <Pressable 
+              style={[
+                styles.utrButton, 
+                { 
+                  backgroundColor: utrClickCount === 2 ? palette.success : palette.accent,
+                  borderColor: utrClickCount === 2 ? palette.success : palette.accent,
+                  ...shadows.soft 
+                }
+              ]}
+              onPress={handleUtrVerification}
+              disabled={utrClickCount >= 1}
+            >
+              <Feather 
+                name={getUtrButtonIcon() as any} 
+                size={16} 
+                color={isDark ? palette.background : '#FFFFFF'} 
+              />
+              <Text style={[styles.utrButtonText, { color: isDark ? palette.background : '#FFFFFF' }]}>
+                {getUtrButtonText()}
+              </Text>
+              {utrClickCount === 1 && (
+                <ActivityIndicator 
+                  size="small" 
+                  color={isDark ? palette.background : '#FFFFFF'} 
+                />
+              )}
+            </Pressable>
+            
             {/* {paypalApproveLink ? (
               <View style={styles.qrMetaFooter}>
                 <Feather name="external-link" size={12} color={palette.textSecondary} />
@@ -1017,6 +1075,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   surfaceSecondaryText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  utrButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    borderWidth: 1,
+  },
+  utrButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },
