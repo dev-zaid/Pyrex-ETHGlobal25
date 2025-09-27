@@ -1,30 +1,17 @@
-// import { useState } from "react";
 import "./App.css";
-import Navbar from "./Navbar";
-import { Hero } from "./Hero";
-import UserPage from "./UserPage";
-// import UpiPage from "./UpiPage";
-import { TimelinePage } from "./Timeline";
-import Seller from "./Seller";
-// import FAQ from "./FAQ";
-import FeatureFaqTabs from "./FeatureFaqTabs";
-import Footer from "./Footer";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { LandingPage } from "./LandingPage";
+import { ProcessingPage } from "./ProcessingPage";
 
 function App() {
   return (
-    <>
-      <Navbar />
-      <Hero />
-      <UserPage />
-      <TimelinePage />
-      {/* <UpiPage /> */}
-      <Seller />
-      {/* <FAQ /> */}
-      <FeatureFaqTabs />
-      <Footer />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/processing" element={<ProcessingPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
 export default App;
-
