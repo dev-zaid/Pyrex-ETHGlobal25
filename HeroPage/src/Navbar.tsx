@@ -6,8 +6,10 @@ const Navbar = () => {
     <nav className="w-1/2 mx-auto fixed inset-x-0 top-0 z-50 bg-black/60 backdrop-blur-2xl border-2 border-white/10 rounded-4xl mt-4">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 text-white">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="PyREX logo" className="h-8 w-8" />
-          <span className="text-2xl font-bold tracking-tight">PyREX</span>
+          <img src={logo} alt="PyREX logo" className="h-10 w-10" />
+          <span className="absolute text-2xl font-bold tracking-tight ml-14">
+            PyREX
+          </span>
         </div>
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2 text-neutral-300">
