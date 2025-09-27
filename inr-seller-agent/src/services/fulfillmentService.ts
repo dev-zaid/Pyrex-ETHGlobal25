@@ -2,14 +2,16 @@ import { fetchReservation } from '../clients/orderbook';
 import { logger } from '../utils/logger';
 import { createDirectTransfer } from '../clients/cashfree';
 
+const AMOUNT_TOLERANCE = 1e-8;
+
 export interface FulfillmentRequest {
   orderId: string;
-  amount: number;
+  expectedAmount?: number;
 }
 
 export interface ReservationCheck {
   reservationId: string;
-  amountAvailable: number;
+  amountToFulfill: number;
 }
 
 export interface FulfillmentResult {
@@ -21,34 +23,43 @@ export interface FulfillmentResult {
   };
 }
 
-export async function validateReservation({ orderId, amount }: FulfillmentRequest): Promise<ReservationCheck> {
+export async function validateReservation({ orderId, expectedAmount }: FulfillmentRequest): Promise<ReservationCheck> {
   const record = await fetchReservation(orderId);
   if (!record) {
     throw new Error(`Reservation ${orderId} not found or inactive`);
   }
 
-  const available = Number(record.amount_pyusd);
-  if (Number.isNaN(available)) {
-    logger.warn({ record }, 'Reservation amount is NaN');
+  if (record.status !== 'pending') {
+    throw new Error(`Reservation ${orderId} is not pending`);
+  }
+
+  const reservedAmount = Number(record.amount_pyusd);
+  if (!Number.isFinite(reservedAmount) || reservedAmount <= 0) {
+    logger.warn({ record }, 'Reservation amount invalid');
     throw new Error('Reservation amount invalid');
   }
 
-  if (amount > available + 1e-8) {
-    throw new Error(`Requested amount exceeds reserved liquidity (${available})`);
+  if (
+    typeof expectedAmount === 'number' &&
+    Math.abs(expectedAmount - reservedAmount) > AMOUNT_TOLERANCE
+  ) {
+    throw new Error(
+      `Requested amount (${expectedAmount}) does not match reserved liquidity (${reservedAmount})`,
+    );
   }
 
-  return { reservationId: record.id, amountAvailable: available };
+  return { reservationId: record.id, amountToFulfill: reservedAmount };
 }
 
 export async function fulfillOrder(request: FulfillmentRequest): Promise<FulfillmentResult> {
-  const { reservationId } = await validateReservation(request);
+  const { reservationId, amountToFulfill } = await validateReservation(request);
 
   const transferId = reservationId;
   let transferResponse;
   try {
     transferResponse = await createDirectTransfer({
       transferMode: 'upi',
-      amount: request.amount,
+      amount: amountToFulfill,
       transferId,
       beneDetails: {
         name: 'Hackathon Seller',
@@ -65,7 +76,7 @@ export async function fulfillOrder(request: FulfillmentRequest): Promise<Fulfill
 
   return {
     reservationId,
-    amount: request.amount,
+    amount: amountToFulfill,
     cashfree: {
       reference_id: transferResponse.referenceId,
       status: transferResponse.status,

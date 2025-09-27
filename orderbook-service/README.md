@@ -57,6 +57,7 @@ Tests cover signature verification, nonce rules, offer lifecycle, reservation fl
 | `POST` | `/offers/:id/reserve` | Atomically reserve liquidity |
 | `POST` | `/reservations/:id/commit` | Mark a reservation as committed |
 | `POST` | `/reservations/:id/release` | Release reservation and restore availability |
+| `GET`  | `/reservations/:id` | Fetch reservation details by id |
 | `GET`  | `/admin/metrics` | Aggregate counters for monitoring |
 
 ### Detailed examples
@@ -115,6 +116,12 @@ curl -X POST http://localhost:3000/offers/<offer_id>/reserve \
   -d '{"amount_pyusd": "75"}'
 ```
 Successful responses include a `reservation_id` and the remaining liquidity.
+
+#### `GET /reservations/:id`
+```bash
+curl http://localhost:3000/reservations/<reservation_id>
+```
+Returns the reservation record (`status`, `amount_pyusd`, timestamps) so downstream agents can validate a hold without database access.
 
 #### `POST /reservations/:id/commit`
 ```bash

@@ -41,8 +41,8 @@ describe('orderProcessor concurrency', () => {
 
     const { scheduleFulfillment } = await import('../src/services/orderProcessor');
 
-    const first = scheduleFulfillment({ orderId: 'res-1', amount: 5 });
-    const second = scheduleFulfillment({ orderId: 'res-1', amount: 2 });
+    const first = scheduleFulfillment({ orderId: 'res-1', expectedAmount: 5 });
+    const second = scheduleFulfillment({ orderId: 'res-1', expectedAmount: 2 });
 
     const settled = await Promise.all([first, second]);
 
@@ -76,7 +76,7 @@ describe('orderProcessor concurrency', () => {
     const { scheduleFulfillment } = await import('../src/services/orderProcessor');
 
     const tasks = ['res-a', 'res-b', 'res-c', 'res-d'].map((id) =>
-      scheduleFulfillment({ orderId: id, amount: 1 }),
+      scheduleFulfillment({ orderId: id, expectedAmount: 1 }),
     );
 
     await Promise.all(tasks);

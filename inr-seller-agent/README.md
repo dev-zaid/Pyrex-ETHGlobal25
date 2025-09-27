@@ -3,7 +3,7 @@
 A lightweight Express service that handles individual seller payout requests. Given a reservation (order) it validates available liquidity via the orderbook-service API, triggers a Cashfree UPI payout (hardcoded to `success@upi` for the hackathon), and returns the Cashfree response to the caller. Reservation status updates are performed by downstream services after settlement.
 
 ## Features
-- `POST /fulfill-order` endpoint accepting `{ order_id, amount }`
+- `POST /fulfill-order` endpoint accepting `{ order_id }` (optional `amount` for sanity checks)
 - Validates reservation by calling the orderbook-service REST API
 - Calls Cashfree payout APIs with configured credentials
 - Returns success/failure responses with audit info
@@ -31,8 +31,7 @@ UPI VPA is fixed to `success@upi` for the hackathon.
 ```
 POST /fulfill-order
 {
-  "order_id": "<reservation_uuid>",
-  "amount": 150
+  "order_id": "<reservation_uuid>"
 }
 ```
 
@@ -41,7 +40,7 @@ Response (success):
 {
   "audit_id": "order-<reservation_uuid>",
   "reservation_id": "<reservation_uuid>",
-  "requested_amount": 150,
+  "fulfilled_amount": 150,
   "cashfree": {
     "reference_id": "payout_abc123",
     "status": "SUCCESS"

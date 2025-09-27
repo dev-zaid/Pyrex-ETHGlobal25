@@ -18,19 +18,26 @@ describe('fulfillmentService', () => {
 
   it('throws when reservation not found', async () => {
     fetchReservation.mockResolvedValue(null);
-    await expect(fulfillOrder({ orderId: 'res-1', amount: 10 })).rejects.toThrow('Reservation res-1 not found or inactive');
+    await expect(fulfillOrder({ orderId: 'res-1' })).rejects.toThrow('Reservation res-1 not found or inactive');
   });
 
-  it('throws when amount exceeds available', async () => {
+  it('throws when reservation is not pending', async () => {
+    fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'committed' });
+    await expect(fulfillOrder({ orderId: 'res-1' })).rejects.toThrow('Reservation res-1 is not pending');
+  });
+
+  it('throws when expected amount mismatches reservation', async () => {
     fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '5', status: 'pending' });
-    await expect(fulfillOrder({ orderId: 'res-1', amount: 10 })).rejects.toThrow('Requested amount exceeds reserved liquidity (5)');
+    await expect(
+      fulfillOrder({ orderId: 'res-1', expectedAmount: 10 }),
+    ).rejects.toThrow('Requested amount (10) does not match reserved liquidity (5)');
   });
 
-  it('returns Razorpay response on success', async () => {
+  it('returns Cashfree response using reservation amount', async () => {
     fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'pending' });
     createDirectTransfer.mockResolvedValue({ referenceId: 'payout_123', status: 'SUCCESS', amount: 10 });
 
-    const result = await fulfillOrder({ orderId: 'res-1', amount: 10 });
+    const result = await fulfillOrder({ orderId: 'res-1' });
 
     expect(createDirectTransfer).toHaveBeenCalledWith({
       transferMode: 'upi',
@@ -51,10 +58,10 @@ describe('fulfillmentService', () => {
     });
   });
 
-  it('throws user-friendly error when Razorpay fails', async () => {
+  it('throws user-friendly error when Cashfree fails', async () => {
     fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'pending' });
     createDirectTransfer.mockRejectedValue(new Error('network error'));
 
-    await expect(fulfillOrder({ orderId: 'res-1', amount: 10 })).rejects.toThrow('Cashfree transaction failed');
+    await expect(fulfillOrder({ orderId: 'res-1' })).rejects.toThrow('Cashfree transaction failed');
   });
 });

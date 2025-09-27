@@ -394,6 +394,42 @@ describe('Reservations API', () => {
   });
 });
 
+describe('GET /reservations/:id', () => {
+  test('returns a reservation record by id', async () => {
+    const offer = buildOffer();
+    const signature = await signOffer(offer);
+
+    const created = await request(app)
+      .post('/offers')
+      .send({ ...offer, signature })
+      .expect(201);
+
+    const reserveResponse = await request(app)
+      .post(`/offers/${created.body.id}/reserve`)
+      .send({ amount_pyusd: '25' })
+      .expect(201);
+
+    const reservationId = reserveResponse.body.reservation_id;
+
+    const reservation = await request(app)
+      .get(`/reservations/${reservationId}`)
+      .expect(200);
+
+    expect(reservation.body).toMatchObject({
+      id: reservationId,
+      offer_id: created.body.id,
+      amount_pyusd: '25',
+      status: 'pending',
+    });
+  });
+
+  test('returns 404 for missing reservation', async () => {
+    await request(app)
+      .get('/reservations/7fcf8c24-4b76-4a03-9ce2-2d37c6e85123')
+      .expect(404);
+  });
+});
+
 describe('Admin metrics', () => {
   test('reports offer and reservation counts', async () => {
     const offerOne = buildOffer({ nonce: 1, available_pyusd: '500', max_pyusd: '600' });

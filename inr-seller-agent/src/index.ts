@@ -12,17 +12,21 @@ app.post('/fulfill-order', async (req, res) => {
   if (!order_id || typeof order_id !== 'string') {
     return res.status(400).json({ error: 'order_id is required' });
   }
-  if (amount === undefined || Number.isNaN(Number(amount))) {
-    return res.status(400).json({ error: 'amount is required' });
-  }
-
   try {
-    const parsedAmount = Number(amount);
-    const result = await scheduleFulfillment({ orderId: order_id, amount: parsedAmount });
+    let expectedAmount: number | undefined;
+    if (amount !== undefined) {
+      const parsed = Number(amount);
+      if (Number.isNaN(parsed)) {
+        return res.status(400).json({ error: 'amount must be numeric when provided' });
+      }
+      expectedAmount = parsed;
+    }
+
+    const result = await scheduleFulfillment({ orderId: order_id, expectedAmount });
     return res.json({
       audit_id: `order-${result.reservationId}`,
       reservation_id: result.reservationId,
-      requested_amount: parsedAmount,
+      fulfilled_amount: result.amount,
       cashfree: result.cashfree,
     });
   } catch (error) {
