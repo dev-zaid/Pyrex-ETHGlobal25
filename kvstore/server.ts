@@ -11,7 +11,7 @@ app.use(express.json());
 const storage = new StorageManager();
 
 // Health check endpoint
-app.get('/health', async (req: Request, res: Response) => {
+app.get('/health', async (req: Request, res: Response): Promise<void> => {
   try {
     const health = await storage.healthCheck();
     res.status(200).json(health);
@@ -24,7 +24,7 @@ app.get('/health', async (req: Request, res: Response) => {
 });
 
 // Statistics endpoint
-app.get('/stats', (req: Request, res: Response) => {
+app.get('/stats', (req: Request, res: Response): void => {
   try {
     const stats = storage.getStorageStats();
     res.status(200).json(stats);
@@ -36,7 +36,7 @@ app.get('/stats', (req: Request, res: Response) => {
 });
 
 // Transaction counts endpoint
-app.get('/counts', async (req: Request, res: Response) => {
+app.get('/counts', async (req: Request, res: Response): Promise<void> => {
   try {
     const counts = await storage.getTransactionCounts();
     res.status(200).json(counts);
@@ -52,18 +52,20 @@ app.get('/counts', async (req: Request, res: Response) => {
 // ===============================
 
 // Create UPI transaction
-app.post('/upi/transactions', async (req: Request, res: Response) => {
+app.post('/upi/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId, ...transactionData } = req.body;
 
     if (!txnId) {
-      return res.status(400).json({ error: 'txnId is required' });
+      res.status(400).json({ error: 'txnId is required' });
+      return;
     }
 
     // Check if transaction already exists
     const existing = await storage.getUpiTransaction(txnId);
     if (existing) {
-      return res.status(409).json({ error: 'Transaction already exists' });
+      res.status(409).json({ error: 'Transaction already exists' });
+      return;
     }
 
     const transaction = await storage.createUpiTransaction(txnId, transactionData);
@@ -76,13 +78,18 @@ app.post('/upi/transactions', async (req: Request, res: Response) => {
 });
 
 // Get UPI transaction by ID
-app.get('/upi/transactions/:txnId', async (req: Request, res: Response) => {
+app.get('/upi/transactions/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.getUpiTransaction(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -94,15 +101,20 @@ app.get('/upi/transactions/:txnId', async (req: Request, res: Response) => {
 });
 
 // Update UPI transaction
-app.put('/upi/transactions/:txnId', async (req: Request, res: Response) => {
+app.put('/upi/transactions/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const updates = req.body;
 
     const transaction = await storage.updateUpiTransaction(txnId, updates);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -114,19 +126,25 @@ app.put('/upi/transactions/:txnId', async (req: Request, res: Response) => {
 });
 
 // Update UPI transaction status
-app.patch('/upi/transactions/:txnId/status', async (req: Request, res: Response) => {
+app.patch('/upi/transactions/:txnId/status', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const { status } = req.body;
 
     if (!status || !['progress', 'completed', 'failed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      return;
     }
 
     const transaction = await storage.updateUpiStatus(txnId, status as TransactionStatus);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -138,13 +156,18 @@ app.patch('/upi/transactions/:txnId/status', async (req: Request, res: Response)
 });
 
 // Mark UPI transaction as completed
-app.patch('/upi/transactions/:txnId/complete', async (req: Request, res: Response) => {
+app.patch('/upi/transactions/:txnId/complete', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.markUpiCompleted(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -156,13 +179,18 @@ app.patch('/upi/transactions/:txnId/complete', async (req: Request, res: Respons
 });
 
 // Mark UPI transaction as failed
-app.patch('/upi/transactions/:txnId/fail', async (req: Request, res: Response) => {
+app.patch('/upi/transactions/:txnId/fail', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.markUpiFailed(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -174,12 +202,13 @@ app.patch('/upi/transactions/:txnId/fail', async (req: Request, res: Response) =
 });
 
 // Get UPI transactions by status
-app.get('/upi/transactions', async (req: Request, res: Response) => {
+app.get('/upi/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     const { status } = req.query;
 
     if (status && !['progress', 'completed', 'failed'].includes(status as string)) {
-      return res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      return;
     }
 
     let transactions;
@@ -190,7 +219,7 @@ app.get('/upi/transactions', async (req: Request, res: Response) => {
       const upiStorage = (storage as any).upiStorage;
       const allIds = await upiStorage.getAllTransactionIds();
       transactions = await Promise.all(
-        allIds.map(id => storage.getUpiTransaction(id))
+        allIds.map((id: string) => storage.getUpiTransaction(id))
       );
       transactions = transactions.filter(t => t !== null);
     }
@@ -204,13 +233,18 @@ app.get('/upi/transactions', async (req: Request, res: Response) => {
 });
 
 // Delete UPI transaction
-app.delete('/upi/transactions/:txnId', async (req: Request, res: Response) => {
+app.delete('/upi/transactions/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const deleted = await storage.deleteUpiTransaction(txnId);
 
     if (!deleted) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(204).send();
@@ -226,18 +260,20 @@ app.delete('/upi/transactions/:txnId', async (req: Request, res: Response) => {
 // ===============================
 
 // Create PayPal transaction
-app.post('/paypal/transactions', async (req: Request, res: Response) => {
+app.post('/paypal/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId, ...transactionData } = req.body;
 
     if (!txnId) {
-      return res.status(400).json({ error: 'txnId is required' });
+      res.status(400).json({ error: 'txnId is required' });
+      return;
     }
 
     // Check if transaction already exists
     const existing = await storage.getPaypalTransaction(txnId);
     if (existing) {
-      return res.status(409).json({ error: 'Transaction already exists' });
+      res.status(409).json({ error: 'Transaction already exists' });
+      return;
     }
 
     const transaction = await storage.createPaypalTransaction(txnId, transactionData);
@@ -250,13 +286,18 @@ app.post('/paypal/transactions', async (req: Request, res: Response) => {
 });
 
 // Get PayPal transaction by ID
-app.get('/paypal/transactions/:txnId', async (req: Request, res: Response) => {
+app.get('/paypal/transactions/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.getPaypalTransaction(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -268,15 +309,20 @@ app.get('/paypal/transactions/:txnId', async (req: Request, res: Response) => {
 });
 
 // Update PayPal transaction
-app.put('/paypal/transactions/:txnId', async (req: Request, res: Response) => {
+app.put('/paypal/transactions/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const updates = req.body;
 
     const transaction = await storage.updatePaypalTransaction(txnId, updates);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -288,19 +334,25 @@ app.put('/paypal/transactions/:txnId', async (req: Request, res: Response) => {
 });
 
 // Update PayPal transaction status
-app.patch('/paypal/transactions/:txnId/status', async (req: Request, res: Response) => {
+app.patch('/paypal/transactions/:txnId/status', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const { status } = req.body;
 
     if (!status || !['progress', 'completed', 'failed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      return;
     }
 
     const transaction = await storage.updatePaypalStatus(txnId, status as TransactionStatus);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -312,13 +364,18 @@ app.patch('/paypal/transactions/:txnId/status', async (req: Request, res: Respon
 });
 
 // Mark PayPal transaction as completed
-app.patch('/paypal/transactions/:txnId/complete', async (req: Request, res: Response) => {
+app.patch('/paypal/transactions/:txnId/complete', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.markPaypalCompleted(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -330,13 +387,18 @@ app.patch('/paypal/transactions/:txnId/complete', async (req: Request, res: Resp
 });
 
 // Mark PayPal transaction as failed
-app.patch('/paypal/transactions/:txnId/fail', async (req: Request, res: Response) => {
+app.patch('/paypal/transactions/:txnId/fail', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.markPaypalFailed(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -348,12 +410,13 @@ app.patch('/paypal/transactions/:txnId/fail', async (req: Request, res: Response
 });
 
 // Get PayPal transactions by status
-app.get('/paypal/transactions', async (req: Request, res: Response) => {
+app.get('/paypal/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     const { status } = req.query;
 
     if (status && !['progress', 'completed', 'failed'].includes(status as string)) {
-      return res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      return;
     }
 
     let transactions;
@@ -364,7 +427,7 @@ app.get('/paypal/transactions', async (req: Request, res: Response) => {
       const paypalStorage = (storage as any).paypalStorage;
       const allIds = await paypalStorage.getAllTransactionIds();
       transactions = await Promise.all(
-        allIds.map(id => storage.getPaypalTransaction(id))
+        allIds.map((id: string) => storage.getPaypalTransaction(id))
       );
       transactions = transactions.filter(t => t !== null);
     }
@@ -378,13 +441,18 @@ app.get('/paypal/transactions', async (req: Request, res: Response) => {
 });
 
 // Get PayPal transaction by Order ID
-app.get('/paypal/transactions/by-order/:orderId', async (req: Request, res: Response) => {
+app.get('/paypal/transactions/by-order/:orderId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { orderId } = req.params;
+    if (!orderId) {
+      res.status(400).json({ error: 'orderId parameter is required' });
+      return;
+    }
     const transaction = await storage.getPaypalTransactionByOrderId(orderId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -396,13 +464,18 @@ app.get('/paypal/transactions/by-order/:orderId', async (req: Request, res: Resp
 });
 
 // Get PayPal transaction by Transaction ID
-app.get('/paypal/transactions/by-txn/:txnId', async (req: Request, res: Response) => {
+app.get('/paypal/transactions/by-txn/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const transaction = await storage.getPaypalTransactionByTransactionId(txnId);
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(200).json(transaction);
@@ -414,13 +487,18 @@ app.get('/paypal/transactions/by-txn/:txnId', async (req: Request, res: Response
 });
 
 // Delete PayPal transaction
-app.delete('/paypal/transactions/:txnId', async (req: Request, res: Response) => {
+app.delete('/paypal/transactions/:txnId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { txnId } = req.params;
+    if (!txnId) {
+      res.status(400).json({ error: 'txnId parameter is required' });
+      return;
+    }
     const deleted = await storage.deletePaypalTransaction(txnId);
 
     if (!deleted) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.status(204).send();
@@ -436,12 +514,13 @@ app.delete('/paypal/transactions/:txnId', async (req: Request, res: Response) =>
 // ===============================
 
 // Get all transactions by status (both UPI and PayPal)
-app.get('/transactions', async (req: Request, res: Response) => {
+app.get('/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     const { status } = req.query;
 
     if (!status || !['progress', 'completed', 'failed'].includes(status as string)) {
-      return res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      res.status(400).json({ error: 'Invalid status. Must be progress, completed, or failed' });
+      return;
     }
 
     const transactions = await storage.getAllTransactionsByStatus(status as TransactionStatus);
@@ -454,7 +533,7 @@ app.get('/transactions', async (req: Request, res: Response) => {
 });
 
 // Clear all transactions (dangerous operation)
-app.delete('/transactions', async (req: Request, res: Response) => {
+app.delete('/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     await storage.clearAllTransactions();
     res.status(204).send();
