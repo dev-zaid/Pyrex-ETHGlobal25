@@ -1,5 +1,6 @@
 import express from 'express';
 import { OrderService } from './orderService';
+import { PaypalPoller } from './paypalPoller';
 import { config } from './config';
 import { logger } from './logger';
 import { TriggerRequest } from './types';
@@ -10,11 +11,19 @@ app.use(express.json({ limit: '1mb' }));
 // Initialize the order service
 const orderService = new OrderService();
 
+// Initialize the PayPal poller
+const paypalPoller = new PaypalPoller(orderService, 'http://localhost:3031', 1000);
+
 // Health check endpoint
 app.get('/health', async (_req, res) => {
   try {
     const health = await orderService.healthCheck();
-    res.status(200).json(health);
+    const pollerStatus = paypalPoller.getStatus();
+    
+    res.status(200).json({
+      ...health,
+      paypalPoller: pollerStatus
+    });
   } catch (error) {
     logger.error({ error }, 'Health check failed');
     res.status(500).json({ 
@@ -123,20 +132,84 @@ app.post('/cleanup', (req, res) => {
   }
 });
 
+// PayPal Poller Control Endpoints
+app.get('/paypal-poller/status', (req, res) => {
+  try {
+    const status = paypalPoller.getStatus();
+    res.status(200).json(status);
+  } catch (error) {
+    logger.error({ error }, 'Failed to get PayPal poller status');
+    res.status(500).json({ 
+      error: (error as Error).message 
+    });
+  }
+});
+
+app.post('/paypal-poller/start', (req, res) => {
+  try {
+    paypalPoller.start();
+    res.status(200).json({ 
+      message: 'PayPal poller started',
+      status: paypalPoller.getStatus()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to start PayPal poller');
+    res.status(500).json({ 
+      error: (error as Error).message 
+    });
+  }
+});
+
+app.post('/paypal-poller/stop', (req, res) => {
+  try {
+    paypalPoller.stop();
+    res.status(200).json({ 
+      message: 'PayPal poller stopped',
+      status: paypalPoller.getStatus()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to stop PayPal poller');
+    res.status(500).json({ 
+      error: (error as Error).message 
+    });
+  }
+});
+
+app.post('/paypal-poller/clear-cache', (req, res) => {
+  try {
+    paypalPoller.clearProcessedTransactions();
+    res.status(200).json({ 
+      message: 'Processed transactions cache cleared',
+      status: paypalPoller.getStatus()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to clear PayPal poller cache');
+    res.status(500).json({ 
+      error: (error as Error).message 
+    });
+  }
+});
+
 // Start the server
 const port = config.port;
 app.listen(port, () => {
   logger.info({ port }, 'Main Agent Service listening');
+  
+  // Auto-start the PayPal poller
+  paypalPoller.start();
+  logger.info('PayPal poller auto-started');
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  paypalPoller.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
+  paypalPoller.stop();
   process.exit(0);
 });
 
