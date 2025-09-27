@@ -38,13 +38,6 @@ import {
   printCapture
 } from './events.js';
 
-// Utility functions
-function assertEnv(name: string) {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing env ${name}`);
-  return v;
-}
-
 function rid() {
   return (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) + Date.now();
 }
