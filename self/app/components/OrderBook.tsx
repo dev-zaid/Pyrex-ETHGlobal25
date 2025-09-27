@@ -339,7 +339,7 @@ export default function OrderBook() {
                             <div className="font-medium text-slate-800 dark:text-slate-200">
                               {parseFloat(offer.available_pyusd).toFixed(2)}
                             </div>
-                            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">PYUSD</div>
+                            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">{offer.token}</div>
                           </td>
                           
                           <td className="px-6 py-4">
