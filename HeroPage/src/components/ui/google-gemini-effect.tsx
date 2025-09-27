@@ -14,10 +14,13 @@ import img6 from "../../assets/rubles.png";
 // center PayPal
 import paypal from "../../assets/paypal.svg";
 
-const transition = { duration: 0, ease: "linear" };
+const transition = { duration: 0 };
 const TRIM_PX = 50;
 
-function useTrim(ref: React.RefObject<SVGPathElement>, trimPx = TRIM_PX) {
+function useTrim(
+  ref: React.RefObject<SVGPathElement | null>,
+  trimPx = TRIM_PX
+) {
   const [fractions, setFractions] = useState({ offset: 0, visible: 1 });
   useEffect(() => {
     const el = ref.current;

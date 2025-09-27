@@ -1,6 +1,5 @@
 import { Timeline } from "./components/ui/timeline";
 import qr from "./assets/QRImage_2.png";
-import { div } from "motion/react-client";
 
 export function TimelinePage() {
   const data = [

@@ -60,7 +60,13 @@ const FAQ = () => {
  * Individual Accordion Item component.
  * Manages its own open/close state.
  */
-const AccordionItem = ({ question, answer }) => {
+const AccordionItem = ({
+  question,
+  answer,
+}: {
+  question: string;
+  answer: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
