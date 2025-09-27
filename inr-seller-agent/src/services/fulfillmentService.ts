@@ -66,7 +66,7 @@ export async function fulfillOrder(
 ): Promise<FulfillmentResult> {
   const { reservationId, amountToFulfill } = await validateReservation(request);
 
-  const transferId = Date.now().toString();
+  const transferId = reservationId;
   let transferResponse;
   try {
     transferResponse = await createDirectTransfer({
