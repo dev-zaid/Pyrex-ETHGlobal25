@@ -24,7 +24,8 @@ export function Hero() {
       <div className="sticky top-48 z-40 flex justify-center">
         <div className="pointer-events-none flex flex-col items-center gap-4 text-center text-white">
           <h1 className="text-7xl font-semibold">Forex Simplified</h1>
-          <p className="text-5xl font-semibold mt-64">Forever</p>
+          {/* <LayoutTextFlip text="" words={["Drama", "Hassle"]} /> */}
+          {/* <p className="text-5xl font-semibold mt-64">Forever</p> */}
         </div>
       </div>
 
@@ -40,4 +41,3 @@ export function Hero() {
     </div>
   );
 }
-
