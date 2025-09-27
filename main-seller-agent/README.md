@@ -55,6 +55,42 @@ PAYOUT_WEBHOOK_URL=
 
 Response includes matched offers, estimated INR totals, simulated transfer hashes, and payout references.
 
+### Sample response explained
+
+```json
+{
+  "audit_id": "ab9faa55-3ee1-4c62-b3e4-25fc9f02e9ff",
+  "matched_offers": [
+    {
+      "offer_id": "6237fe9e-c785-44ee-b655-0622da2e5efa",
+      "seller_pubkey": "0x439115aFf7e5F94F3A013Ddfd8CdF530408f44E8",
+      "token": "PYUSD",
+      "chain": "polygon",
+      "rate": 0.0115,
+      "fee_pct": 0.0015,
+      "reserved_pyusd": 150,
+      "expected_inr": 13023.913043478262,
+      "reservation_id": "pending",
+      "est_latency_ms": 9000
+    }
+  ],
+  "totals": {
+    "total_pyusd": 150,
+    "total_inr_estimated": 13023.913043478262,
+    "weighted_latency_ms": 9000
+  },
+  "onchain_transfers": [],
+  "seller_payouts": []
+}
+```
+
+- `audit_id` uniquely tags the routing attempt for tracing.
+- `matched_offers` contains the chosen seller(s). Here the agent only needed one offer because it had enough liquidity to cover the 150 PYUSD target.
+- `expected_inr` is derived from the offer’s rate and fee: `150 ÷ 0.0115 ≈ 13 043.48 INR`, multiplied by `(1 - 0.0015)` for the 0.15 % fee, yielding `≈ 13 023.91 INR`.
+- `reservation_id` is `"pending"` because the settlement flow has been disabled for now—the router is only returning the recommended plan, not locking liquidity.
+- `totals` aggregates the matched offer(s) and reports the weighted latency (9 seconds in this example).
+- `onchain_transfers` and `seller_payouts` are empty while the settlement/payout pipeline remains stubbed.
+
 Run tests:
 ```bash
 npm test
