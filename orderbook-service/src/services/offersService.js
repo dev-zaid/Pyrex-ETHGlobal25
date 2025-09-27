@@ -38,64 +38,64 @@ async function createOrUpdateOffer(offer, signature) {
   try {
     await client.query("BEGIN");
 
-    const existingResult = await client.query(
-      "SELECT * FROM offers WHERE seller_pubkey = $1 ORDER BY nonce DESC LIMIT 1 FOR UPDATE",
-      [offer.seller_pubkey]
-    );
+    // const existingResult = await client.query(
+    //   "SELECT * FROM offers WHERE seller_pubkey = $1 ORDER BY nonce DESC LIMIT 1 FOR UPDATE",
+    //   [offer.seller_pubkey]
+    // );
 
     let savedRow;
 
-    if (existingResult.rowCount > 0) {
-      const existingOffer = existingResult.rows[0];
-      // const existingNonce = BigInt(existingOffer.nonce);
-      // if (offer.nonce <= existingNonce) {
-      //   const err = new Error('Nonce must be greater than previous nonce for seller');
-      //   err.status = 409;
-      //   throw err;
-      // }
+    // if (existingResult.rowCount > 0) {
+    //   const existingOffer = existingResult.rows[0];
+    //   // const existingNonce = BigInt(existingOffer.nonce);
+    //   // if (offer.nonce <= existingNonce) {
+    //   //   const err = new Error('Nonce must be greater than previous nonce for seller');
+    //   //   err.status = 409;
+    //   //   throw err;
+    //   // }
 
-      const updateQuery = `
-        UPDATE offers
-        SET chain = $1,
-            token = $2,
-            rate_pyusd_per_inr = $3,
-            min_pyusd = $4,
-            max_pyusd = $5,
-            available_pyusd = $6,
-            fee_pct = $7,
-            est_latency_ms = $8,
-            supports_swap = $9,
-            upi_enabled = $10,
-            status = 'active',
-            nonce = $11,
-            expiry_timestamp = $12,
-            signature = $13,
-            updated_at = now()
-        WHERE id = $14
-        RETURNING *;
-      `;
+    //   const updateQuery = `
+    //     UPDATE offers
+    //     SET chain = $1,
+    //         token = $2,
+    //         rate_pyusd_per_inr = $3,
+    //         min_pyusd = $4,
+    //         max_pyusd = $5,
+    //         available_pyusd = $6,
+    //         fee_pct = $7,
+    //         est_latency_ms = $8,
+    //         supports_swap = $9,
+    //         upi_enabled = $10,
+    //         status = 'active',
+    //         nonce = $11,
+    //         expiry_timestamp = $12,
+    //         signature = $13,
+    //         updated_at = now()
+    //     WHERE id = $14
+    //     RETURNING *;
+    //   `;
 
-      const updateValues = [
-        offer.chain,
-        offer.token,
-        offer.rate_pyusd_per_inr,
-        offer.min_pyusd,
-        offer.max_pyusd,
-        offer.available_pyusd,
-        offer.fee_pct,
-        offer.est_latency_ms,
-        offer.supports_swap,
-        offer.upi_enabled,
-        offer.nonce.toString(),
-        expiryValue,
-        signature,
-        existingOffer.id,
-      ];
+    //   const updateValues = [
+    //     offer.chain,
+    //     offer.token,
+    //     offer.rate_pyusd_per_inr,
+    //     offer.min_pyusd,
+    //     offer.max_pyusd,
+    //     offer.available_pyusd,
+    //     offer.fee_pct,
+    //     offer.est_latency_ms,
+    //     offer.supports_swap,
+    //     offer.upi_enabled,
+    //     offer.nonce.toString(),
+    //     expiryValue,
+    //     signature,
+    //     existingOffer.id,
+    //   ];
 
-      const updateResult = await client.query(updateQuery, updateValues);
-      savedRow = updateResult.rows[0];
-    } else {
-      const insertQuery = `
+    //   const updateResult = await client.query(updateQuery, updateValues);
+    //   savedRow = updateResult.rows[0];
+    // } else {
+    const insertQuery = `
         INSERT INTO offers (
           seller_pubkey,
           chain,
@@ -117,27 +117,25 @@ async function createOrUpdateOffer(offer, signature) {
         )
         RETURNING *;
       `;
-
-      const insertValues = [
-        offer.seller_pubkey,
-        offer.chain,
-        offer.token,
-        offer.rate_pyusd_per_inr,
-        offer.min_pyusd,
-        offer.max_pyusd,
-        offer.available_pyusd,
-        offer.fee_pct,
-        offer.est_latency_ms,
-        offer.supports_swap,
-        offer.upi_enabled,
-        offer.nonce.toString(),
-        expiryValue,
-        signature,
-      ];
-
-      const insertResult = await client.query(insertQuery, insertValues);
-      savedRow = insertResult.rows[0];
-    }
+    const insertValues = [
+      offer.seller_pubkey,
+      offer.chain,
+      offer.token,
+      offer.rate_pyusd_per_inr,
+      offer.min_pyusd,
+      offer.max_pyusd,
+      offer.available_pyusd,
+      offer.fee_pct,
+      offer.est_latency_ms,
+      offer.supports_swap,
+      offer.upi_enabled,
+      offer.nonce.toString(),
+      expiryValue,
+      signature,
+    ];
+    const insertResult = await client.query(insertQuery, insertValues);
+    savedRow = insertResult.rows[0];
+    // }
 
     await client.query("COMMIT");
     return sanitizeOfferRow(savedRow);
