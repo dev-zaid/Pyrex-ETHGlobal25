@@ -7,7 +7,7 @@ import {
   SelfBackendVerifier,
   AllIds,
 } from "@selfxyz/core";
-import { getUserOptions, initializeUserConfig } from "./sharedStorage";
+import { getUserOptions, initializeUserConfig } from "../../app/components/sharedStorage";
 
 export class InMemoryConfigStore implements IConfigStorage {
   async getActionId(userIdentifier: string, data: string): Promise<string> {

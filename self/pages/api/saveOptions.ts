@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { cleanupExpiredEntries, setUserOptions } from "./sharedStorage";
+import { cleanupExpiredEntries, setUserOptions } from "../../app/components/sharedStorage";
 
 export default async function handler(
   req: NextApiRequest,
