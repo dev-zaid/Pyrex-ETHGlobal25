@@ -70,7 +70,7 @@ Response includes matched offers, estimated INR totals, simulated transfer hashe
       "fee_pct": 0.0015,
       "reserved_pyusd": 150,
       "expected_inr": 13023.913043478262,
-      "reservation_id": "pending",
+      "reservation_id": "3ab3f4ac-2b1d-4d25-8077-1bb7520cb7ae",
       "est_latency_ms": 9000
     }
   ],
@@ -87,9 +87,9 @@ Response includes matched offers, estimated INR totals, simulated transfer hashe
 - `audit_id` uniquely tags the routing attempt for tracing.
 - `matched_offers` contains the chosen seller(s). Here the agent only needed one offer because it had enough liquidity to cover the 150 PYUSD target.
 - `expected_inr` is derived from the offer’s rate and fee: `150 ÷ 0.0115 ≈ 13 043.48 INR`, multiplied by `(1 - 0.0015)` for the 0.15 % fee, yielding `≈ 13 023.91 INR`.
-- `reservation_id` is `"pending"` because the settlement flow has been disabled for now—the router is only returning the recommended plan, not locking liquidity.
+- `reservation_id` now carries the real reservation identifier returned by `/offers/:id/reserve`, meaning the liquidity has been locked in the orderbook for downstream services to settle or release.
 - `totals` aggregates the matched offer(s) and reports the weighted latency (9 seconds in this example).
-- `onchain_transfers` and `seller_payouts` are empty while the settlement/payout pipeline remains stubbed.
+- `onchain_transfers` and `seller_payouts` stay empty because the downstream settlement/payout pipeline runs in a separate service.
 
 Run tests:
 ```bash

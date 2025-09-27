@@ -131,6 +131,18 @@ curl -X POST http://localhost:3000/reservations/<reservation_id>/release
 curl http://localhost:3000/admin/metrics | jq '.'
 ```
 
+## Settlement orchestration (external service)
+
+The orderbook now treats reservation and fulfilment as a two-phase flow. The router locks liquidity by calling `POST /offers/:id/reserve` and returns the resulting `reservation_id` to an **external settlement service**. That companion service should:
+
+1. **Inspect the route response** – for each `matched_offers[]` entry take the `reservation_id`, `reserved_pyusd`, and seller metadata.
+2. **Perform settlement** – execute the actual PYUSD transfer (or other business logic) and any payout/UPI workflows. This is intentionally decoupled from the orderbook to keep on-chain handling isolated.
+3. **On success** – call `POST /reservations/:id/commit` to mark the hold as committed.
+4. **On failure / timeout** – call `POST /reservations/:id/release` so the liquidity returns to the orderbook.
+5. **Monitor** – use `/admin/metrics` to track pending reservations and build alerting if a reservation stays pending for too long (indicative of a stuck settlement flow).
+
+By keeping settlement in a separate service you can swap implementations (mock, testnet, production) without modifying the orderbook core. This README documents the orderbook responsibilities; place settlement service specifics—webhooks, RPC requirements, retry policy—in that service’s repository.
+
 ## Configuration
 | Variable | Default | Notes |
 | -------- | ------- | ----- |
