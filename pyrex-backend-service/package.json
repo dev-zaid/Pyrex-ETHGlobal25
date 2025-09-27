@@ -1,0 +1,32 @@
+{
+  "name": "pyrex-backend-service",
+  "version": "0.1.0",
+  "description": "Back-office CRUD service for Pyrex sellers, users, and transactions",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "pyrex",
+    "backend",
+    "crud"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "morgan": "^1.10.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.12.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "nodemon": "^3.1.10"
+  }
+}
