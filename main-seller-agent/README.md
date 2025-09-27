@@ -38,23 +38,35 @@ PAYOUT_WEBHOOK_URL=
 ```
 
 ### API
-`POST /route` with payload:
+
+#### POST /route
+
+Routes an inbound PYUSD liquidity request to the best available sellers on the orderbook and reserves their inventory. Provide at least one of `target_pyusd` or `target_inr`.
+
 ```json
 {
   "target_pyusd": "250",
   "constraints": {
     "max_latency_ms": 20000,
-    "max_fee_pct": 0.03
+    "max_fee_pct": 0.03,
+    "allow_non_pyusd": false
   },
   "payment_context": {
-    "chain": "polygon",
-    "payer": "0xPayer",
-    "tx_hash": "0xIncomingTx"
+    "chain": "polygon"
   }
 }
 ```
 
-Response includes matched offers, estimated INR totals, simulated transfer hashes, and payout references.
+- `target_pyusd` (string, optional) amount of PYUSD the agent should source; use a string to avoid precision loss. Required if `target_inr` is absent.
+- `target_inr` (string, optional) lets the agent back into the PYUSD amount using the weighted INR-to-PYUSD conversion from ranked offers.
+- `constraints` (object, optional) forwards filters to `GET /offers` on the orderbook: `max_latency_ms` rejects slow offers, `max_fee_pct` caps seller fees, and `allow_non_pyusd` removes the default `token=PYUSD` filter so multi-token pools can be considered.
+- `payment_context` (object, optional) lets callers pass metadata downstream when a settlement flow needs it. Include `chain` if you want to override the default Polygon snapshot; add `payer` or `tx_hash` only when you need to correlate routing decisions with external payments.
+
+Request handling flow: the agent pulls up to 100 offers for `chain=polygon` (and `token=PYUSD` unless `allow_non_pyusd` is true), ranks them using the configurable `ROUTER_WEIGHTS`, runs a greedy allocator to satisfy the desired PYUSD, and creates reservations on the external orderbook. Any error during reservation triggers a rollback of prior holds.
+
+Responses:
+- `200 OK` returns a `RouteResponse` with the matched offers, totals, and downstream execution placeholders.
+- `400 Bad Request` carries `{ "error": "message" }` when validation, liquidity, or reservation steps fail.
 
 ### Sample response explained
 

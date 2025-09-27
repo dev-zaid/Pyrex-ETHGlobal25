@@ -32,10 +32,10 @@ export interface RouteRequest {
     max_fee_pct?: number;
     allow_non_pyusd?: boolean;
   };
-  payment_context: {
-    chain: string;
-    payer: string;
-    tx_hash: string;
+  payment_context?: {
+    chain?: string;
+    payer?: string;
+    tx_hash?: string;
   };
 }
 
