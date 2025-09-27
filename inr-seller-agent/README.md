@@ -4,7 +4,7 @@ A lightweight Express service that handles individual seller payout requests. Gi
 
 ## Features
 - `POST /fulfill-order` endpoint accepting `{ order_id, amount }`
-- Validates reservation via the shared Postgres orderbook database
+- Validates reservation by calling the orderbook-service REST API
 - Calls Razorpay APIs with configured credentials
 - Returns success/failure responses with audit info
 - Structured logging with Pino
@@ -20,7 +20,7 @@ npm run dev
 Copy `.env.example` to `.env` and set values:
 ```
 PORT=5000
-DATABASE_URL=postgres://user:pass@host:5432/dbname
+ORDERBOOK_SERVICE_URL=http://localhost:3000
 RAZORPAY_BASE_URL=https://api.razorpay.com/v1
 RAZORPAY_KEY_ID=rzp_test_123
 RAZORPAY_KEY_SECRET=secret
@@ -66,5 +66,6 @@ npm test
 
 ## Notes
 - The agent only reserves and executes payouts; reservation status updates are handled by another coordinating service.
+- All order/reservation CRUD goes through the orderbook-service HTTP endpoints—no direct database access.
 - Monitor reservations via the orderbook service to ensure unsettled orders are committed or released.
 - Each seller can run an isolated container; the service is stateless and supports concurrent requests by validating and dispatching Razorpay calls per order.

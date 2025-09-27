@@ -531,6 +531,11 @@ async function releaseReservation(reservationId) {
   }
 }
 
+async function getReservationById(reservationId) {
+  const { rows } = await pool.query('SELECT * FROM reservations WHERE id = $1 LIMIT 1', [reservationId]);
+  return sanitizeReservationRow(rows[0]);
+}
+
 module.exports = {
   createOrUpdateOffer,
   sanitizeOfferRow,
@@ -541,5 +546,6 @@ module.exports = {
   reserveOffer,
   commitReservation,
   releaseReservation,
+  getReservationById,
   sanitizeReservationRow,
 };

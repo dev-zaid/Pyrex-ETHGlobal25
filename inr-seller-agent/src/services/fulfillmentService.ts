@@ -1,4 +1,4 @@
-import { findReservationById } from '../db/reservations';
+import { fetchReservation } from '../clients/orderbook';
 import { logger } from '../utils/logger';
 import { createUpiPayment } from '../clients/razorpay';
 
@@ -22,7 +22,7 @@ export interface FulfillmentResult {
 }
 
 export async function validateReservation({ orderId, amount }: FulfillmentRequest): Promise<ReservationCheck> {
-  const record = await findReservationById(orderId);
+  const record = await fetchReservation(orderId);
   if (!record) {
     throw new Error(`Reservation ${orderId} not found or inactive`);
   }

@@ -4,7 +4,7 @@ dotenv.config();
 
 export function getEnv(key: string, defaultValue?: string): string {
   const value = process.env[key];
-  if (value == null || value === '') {
+  if (value === undefined || value === '') {
     if (defaultValue !== undefined) {
       return defaultValue;
     }
