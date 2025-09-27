@@ -1,7 +1,7 @@
 import express from 'express';
 import { json } from 'body-parser';
 import { logger } from './utils/logger';
-import { validateReservation } from './services/fulfillmentService';
+import { fulfillOrder } from './services/fulfillmentService';
 
 const app = express();
 app.use(json());
@@ -18,12 +18,12 @@ app.post('/fulfill-order', async (req, res) => {
 
   try {
     const parsedAmount = Number(amount);
-    const reservation = await validateReservation({ orderId: order_id, amount: parsedAmount });
+    const result = await fulfillOrder({ orderId: order_id, amount: parsedAmount });
     return res.json({
-      message: 'Reservation validated',
-      reservation_id: reservation.reservationId,
+      audit_id: `order-${result.reservationId}`,
+      reservation_id: result.reservationId,
       requested_amount: parsedAmount,
-      available_amount: reservation.amountAvailable,
+      razorpay: result.razorpay,
     });
   } catch (error) {
     logger.error({ error }, 'Reservation validation failed');

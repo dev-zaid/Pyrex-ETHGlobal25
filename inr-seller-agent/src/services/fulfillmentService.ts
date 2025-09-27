@@ -1,5 +1,6 @@
 import { findReservationById } from '../db/reservations';
 import { logger } from '../utils/logger';
+import { createUpiPayment } from '../clients/razorpay';
 
 export interface FulfillmentRequest {
   orderId: string;
@@ -9,6 +10,15 @@ export interface FulfillmentRequest {
 export interface ReservationCheck {
   reservationId: string;
   amountAvailable: number;
+}
+
+export interface FulfillmentResult {
+  reservationId: string;
+  amount: number;
+  razorpay: {
+    payment_id: string;
+    status: string;
+  };
 }
 
 export async function validateReservation({ orderId, amount }: FulfillmentRequest): Promise<ReservationCheck> {
@@ -28,4 +38,25 @@ export async function validateReservation({ orderId, amount }: FulfillmentReques
   }
 
   return { reservationId: record.id, amountAvailable: available };
+}
+
+export async function fulfillOrder(request: FulfillmentRequest): Promise<FulfillmentResult> {
+  const { reservationId } = await validateReservation(request);
+
+  const amountInPaise = Math.round(request.amount * 100);
+  const razorpayResponse = await createUpiPayment({
+    amount: amountInPaise,
+    currency: 'INR',
+    upi: { vpa: 'success@upi' },
+    reference_id: reservationId,
+  });
+
+  return {
+    reservationId,
+    amount: request.amount,
+    razorpay: {
+      payment_id: razorpayResponse.id,
+      status: razorpayResponse.status,
+    },
+  };
 }
