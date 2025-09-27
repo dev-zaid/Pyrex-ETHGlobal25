@@ -64,6 +64,13 @@ export interface TriggerRequest {
   vendor_upi: string;
 }
 
+export interface PaymentResult {
+  offerId: string;
+  success: boolean;
+  amount?: number;
+  error?: string;
+}
+
 export interface OrderTrigger {
   id: string;
   target_pyusd: string;
@@ -73,6 +80,7 @@ export interface OrderTrigger {
   timestamp: Date;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   response?: MainAgentResponse;
+  paymentResults?: PaymentResult[];
   error?: string;
 }
 

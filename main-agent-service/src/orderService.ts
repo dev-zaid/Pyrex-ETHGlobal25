@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { MainAgentApiClient } from './apiClient';
 import { logger } from './logger';
-import { OrderRequest, TriggerRequest, OrderTrigger, MainAgentResponse } from './types';
+import { OrderRequest, TriggerRequest, OrderTrigger, MainAgentResponse, PaymentResult } from './types';
 import { startPayment } from './payment/src';
 
 /**
@@ -72,21 +72,83 @@ export class OrderService {
       // Call the main agent API
       const response: MainAgentResponse = await this.apiClient.routeOrder(orderRequest);
 
-      try{
-      await startPayment((response.totals.total_pyusd * 1e6).toString());
-      }catch(error){
-        logger.error(
+      // Process payments for each matched offer individually
+      let paymentResults: PaymentResult[] = [];
+      if (response.matched_offers && response.matched_offers.length > 0) {
+        logger.info(
           { 
             orderId, 
-            error: (error as Error).message 
+            matchedOffersCount: response.matched_offers.length 
           },
-          'Payment failed'
+          'Starting payment processing for matched offers'
+        );
+        for (const matchedOffer of response.matched_offers) {
+          try {
+            logger.info(
+              { 
+                orderId, 
+                offerId: matchedOffer.offer_id,
+                sellerPubkey: matchedOffer.seller_pubkey,
+                reservedPyusd: matchedOffer.reserved_pyusd
+              },
+              'Processing payment for matched offer'
+            );
+
+            // Convert PYUSD amount to wei (assuming 6 decimals for PYUSD)
+            const amountInWei = (matchedOffer.reserved_pyusd * 1e6).toString();
+            
+            await startPayment(amountInWei);
+            
+            paymentResults.push({
+              offerId: matchedOffer.offer_id,
+              success: true,
+              amount: matchedOffer.reserved_pyusd
+            });
+
+            logger.info(
+              { 
+                orderId, 
+                offerId: matchedOffer.offer_id,
+                amount: matchedOffer.reserved_pyusd
+              },
+              'Payment completed successfully for offer'
+            );
+
+          } catch (error) {
+            logger.error(
+              { 
+                orderId, 
+                offerId: matchedOffer.offer_id,
+                error: (error as Error).message 
+              },
+              'Payment failed for offer'
+            );
+
+            paymentResults.push({
+              offerId: matchedOffer.offer_id,
+              success: false,
+              error: (error as Error).message,
+              amount: matchedOffer.reserved_pyusd
+            });
+          }
+        }
+
+        const successfulPayments = paymentResults.filter(p => p.success).length;
+        logger.info(
+          { 
+            orderId, 
+            totalPayments: paymentResults.length,
+            successfulPayments,
+            failedPayments: paymentResults.length - successfulPayments
+          },
+          'Payment processing completed for all offers'
         );
       }
       
-      // Update order with successful response
+      // Update order with successful response and payment results
       orderTrigger.status = 'completed';
       orderTrigger.response = response;
+      orderTrigger.paymentResults = paymentResults;
       this.activeOrders.set(orderId, orderTrigger);
 
       logger.info(
