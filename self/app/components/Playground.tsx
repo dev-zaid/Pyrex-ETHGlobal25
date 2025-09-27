@@ -48,10 +48,18 @@ function Playground() {
         expiry_timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16) // 24 hours from now
     });
     const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+    const [inrRateInput, setInrRateInput] = useState('90'); // Default to 90 INR for 1 PYUSD
 
     useEffect(() => {
         setUserId(uuidv4());
     }, []);
+
+    // Initialize PYUSD rate based on default INR rate
+    useEffect(() => {
+        const defaultInrRate = 90;
+        const pyusdPerInrRate = (1 / defaultInrRate).toString();
+        setOrderForm(prev => ({ ...prev, rate_pyusd_per_inr: pyusdPerInrRate }));
+    }, []); // Run once on mount
 
     const handleSuccess = () => {
         // Verification successful
@@ -227,6 +235,7 @@ function Playground() {
                     available_pyusd: '',
                     expiry_timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
                 });
+                setInrRateInput('90'); // Reset to default INR rate
             } else {
                 const error = await response.text();
                 console.error('Failed to submit order:', error);
@@ -788,18 +797,36 @@ function Playground() {
                                 {/* Exchange Rate */}
                                 <div className="mb-4">
                                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                        Rate (PYUSD per INR)
+                                        Rate (INR per PYUSD)
                                     </label>
                                     <div className="relative">
                                         <input
                                             type="number"
-                                            step="0.000000000000000001"
-                                            placeholder="0.012345678912345678"
-                                            value={orderForm.rate_pyusd_per_inr}
-                                            onChange={(e) => setOrderForm(prev => ({ ...prev, rate_pyusd_per_inr: e.target.value }))}
+                                            step="0.01"
+                                            placeholder="90.00"
+                                            value={inrRateInput}
+                                            onChange={(e) => {
+                                                setInrRateInput(e.target.value);
+                                                // Calculate PYUSD per INR rate (1/INR_rate)
+                                                const inrValue = parseFloat(e.target.value);
+                                                if (inrValue && inrValue > 0) {
+                                                    const pyusdPerInrRate = (1 / inrValue).toString();
+                                                    setOrderForm(prev => ({ ...prev, rate_pyusd_per_inr: pyusdPerInrRate }));
+                                                } else {
+                                                    setOrderForm(prev => ({ ...prev, rate_pyusd_per_inr: '' }));
+                                                }
+                                            }}
                                             className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
                                         />
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">INR</span>
+                                        </div>
                                     </div>
+                                    {orderForm.rate_pyusd_per_inr && (
+                                        <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/30 rounded-lg px-3 py-2">
+                                            Calculated rate: {parseFloat(orderForm.rate_pyusd_per_inr).toFixed(18)} PYUSD per INR
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Min/Max Amount Grid */}
