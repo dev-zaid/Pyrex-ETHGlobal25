@@ -67,3 +67,4 @@ npm test
 ## Notes
 - The agent only reserves and executes payouts; reservation status updates are handled by another coordinating service.
 - Monitor reservations via the orderbook service to ensure unsettled orders are committed or released.
+- Each seller can run an isolated container; the service is stateless and supports concurrent requests by validating and dispatching Razorpay calls per order.
