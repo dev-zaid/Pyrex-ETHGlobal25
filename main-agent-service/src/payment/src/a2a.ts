@@ -36,8 +36,7 @@ let PRIVATE_KEY_ADDRESS='0xCA3953e536bDA86D1F152eEfA8aC7b0C82b6eC00'
       
       // For simplicity, pick first accepts and create a payment payload
       const first = Array.isArray(accepts) ? accepts[0] : accepts;
-      const envPayment = process.env.PAYMENT_AMOUNT;
-      const value = envPayment || first?.maxAmountRequired || '10000';
+      const value = input?.amount || first?.maxAmountRequired || '10000';
       const payment = await createDemoPaymentPayload(PRIVATE_KEY_ADDRESS || '0xPayer', first.payTo, value, first.asset || '0xVerifier');
       const b64 = encodePaymentPayload(payment);
       // Retry initial resource call by sending to service agent with X-PAYMENT header (service will forward)
