@@ -11,6 +11,22 @@ if (!connectionString) {
 
 const pool = new Pool({ connectionString });
 
+try {
+  const normalized = connectionString.replace(/^(postgres(ql)?):\/\//, 'http://');
+  const parsed = new URL(normalized);
+  console.log(
+    '[db] connecting',
+    {
+      host: parsed.hostname,
+      port: parsed.port || '5432',
+      database: parsed.pathname.replace('/', ''),
+      user: parsed.username,
+    }
+  );
+} catch (err) {
+  console.warn('[db] failed to parse connection string', err);
+}
+
 pool.on('error', (err) => {
   console.error('Unexpected database error', err);
 });

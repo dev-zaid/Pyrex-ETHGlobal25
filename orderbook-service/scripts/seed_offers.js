@@ -116,6 +116,11 @@ async function main() {
       nonceOffsets.set(sellerKey, offset + 1n);
       offer.nonce = nonce.toString();
 
+      if (!offer.expiry_timestamp) {
+        const expiry = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+        offer.expiry_timestamp = expiry.toISOString();
+      }
+
       const canonical = canonicalizeOffer(offer);
       const digest = hashCanonicalString(canonical);
       const signature = await wallet.signMessage(ethers.getBytes(digest));
