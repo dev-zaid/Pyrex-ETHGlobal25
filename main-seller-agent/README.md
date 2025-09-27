@@ -9,6 +9,7 @@ A TypeScript service that listens for incoming PYUSD liquidity requests and allo
 - Mockable Polygon ERC20 transfers and UPI payouts
 - Express API exposing `/health` and `/route`
 - Structured logging with Pino and configurable environment
+- Designed to accommodate multiple concurrent order requests via short-lived reservations and stateless orchestration
 
 ## Getting started
 ```bash
@@ -90,6 +91,14 @@ Response includes matched offers, estimated INR totals, simulated transfer hashe
 - `reservation_id` now carries the real reservation identifier returned by `/offers/:id/reserve`, meaning the liquidity has been locked in the orderbook for downstream services to settle or release.
 - `totals` aggregates the matched offer(s) and reports the weighted latency (9 seconds in this example).
 - `onchain_transfers` and `seller_payouts` stay empty because the downstream settlement/payout pipeline runs in a separate service.
+
+## Handling multiple incoming orders
+
+- Each `/route` call fetches the orderbook snapshot on demand and computes allocations independently, so the agent can serve many concurrent requests without shared state.
+- Reservations are issued sequentially within a single request to keep its batch atomic; if an offer suddenly lacks liquidity the reservation call fails and previously reserved rows are released before the error bubbles up.
+- Run multiple instances (or a process cluster) behind a load balancer to scale throughput—reservation logic is transactional in the orderbook DB, preventing double spends across threads/processes.
+- Downstream settlement should process each reservation ID asynchronously and either `commit` or `release` it. Pending reservations can be monitored through the orderbook’s `/admin/metrics` endpoint.
+- Use the `audit_id` returned in responses to correlate logs across services when diagnosing concurrent flows.
 
 Run tests:
 ```bash
