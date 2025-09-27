@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { MainAgentApiClient } from './apiClient';
 import { logger } from './logger';
-import { OrderRequest, OrderTrigger, MainAgentResponse } from './types';
+import { OrderRequest, TriggerRequest, OrderTrigger, MainAgentResponse } from './types';
 import { startPayment } from './payment/src';
 
 /**
@@ -17,16 +17,35 @@ export class OrderService {
   }
 
   /**
+   * Transforms a trigger request into the format expected by the main agent
+   */
+  private transformTriggerRequest(triggerRequest: TriggerRequest): OrderRequest {
+    return {
+      target_pyusd: triggerRequest.target_pyusd,
+      constraints: {
+        max_latency_ms: 20000,
+        max_fee_pct: 0.03
+      },
+      payment_context: {
+        chain: "polygon",
+        payer: "0x1234567890abcdef1234567890abcdef12345678",
+        tx_hash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12"
+      }
+    };
+  }
+
+  /**
    * Triggers an order for USD amount
    */
-  async triggerOrder(orderRequest: OrderRequest): Promise<OrderTrigger> {
+  async triggerOrder(triggerRequest: TriggerRequest): Promise<OrderTrigger> {
     const orderId = uuidv4();
     
     const orderTrigger: OrderTrigger = {
       id: orderId,
-      target_pyusd: orderRequest.target_pyusd,
-      payer: orderRequest.payment_context.payer,
-      tx_hash: orderRequest.payment_context.tx_hash,
+      target_pyusd: triggerRequest.target_pyusd,
+      vendor_upi: triggerRequest.vendor_upi,
+      payer: "0x1234567890abcdef1234567890abcdef12345678",
+      tx_hash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
       timestamp: new Date(),
       status: 'pending',
     };
@@ -36,9 +55,8 @@ export class OrderService {
     logger.info(
       { 
         orderId, 
-        targetPyusd: orderRequest.target_pyusd, 
-        payer: orderRequest.payment_context.payer,
-        txHash: orderRequest.payment_context.tx_hash
+        targetPyusd: triggerRequest.target_pyusd, 
+        vendorUpi: triggerRequest.vendor_upi
       },
       'Order trigger initiated'
     );
@@ -48,6 +66,9 @@ export class OrderService {
       orderTrigger.status = 'processing';
       this.activeOrders.set(orderId, orderTrigger);
 
+      // Transform trigger request to order request format
+      const orderRequest = this.transformTriggerRequest(triggerRequest);
+      
       // Call the main agent API
       const response: MainAgentResponse = await this.apiClient.routeOrder(orderRequest);
 

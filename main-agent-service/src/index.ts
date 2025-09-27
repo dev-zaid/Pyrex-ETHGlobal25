@@ -2,7 +2,7 @@ import express from 'express';
 import { OrderService } from './orderService';
 import { config } from './config';
 import { logger } from './logger';
-import { OrderRequest } from './types';
+import { TriggerRequest } from './types';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -27,28 +27,16 @@ app.get('/health', async (_req, res) => {
 // Trigger USD order endpoint
 app.post('/trigger-order', async (req, res) => {
   try {
-    const orderRequest: OrderRequest = req.body;
+    const triggerRequest: TriggerRequest = req.body;
 
     // Validate required fields
-    if (!orderRequest.target_pyusd || !orderRequest.constraints || !orderRequest.payment_context) {
+    if (!triggerRequest.target_pyusd || !triggerRequest.vendor_upi) {
       return res.status(400).json({
-        error: 'Missing required fields: target_pyusd, constraints, and payment_context are required'
+        error: 'Missing required fields: target_pyusd and vendor_upi are required'
       });
     }
 
-    if (!orderRequest.constraints.max_latency_ms || !orderRequest.constraints.max_fee_pct) {
-      return res.status(400).json({
-        error: 'Missing required constraint fields: max_latency_ms and max_fee_pct are required'
-      });
-    }
-
-    if (!orderRequest.payment_context.chain || !orderRequest.payment_context.payer || !orderRequest.payment_context.tx_hash) {
-      return res.status(400).json({
-        error: 'Missing required payment_context fields: chain, payer, and tx_hash are required'
-      });
-    }
-
-    if (parseFloat(orderRequest.target_pyusd) <= 0) {
+    if (parseFloat(triggerRequest.target_pyusd) <= 0) {
       return res.status(400).json({
         error: 'target_pyusd must be greater than 0'
       });
@@ -56,15 +44,13 @@ app.post('/trigger-order', async (req, res) => {
 
     logger.info(
       { 
-        targetPyusd: orderRequest.target_pyusd, 
-        payer: orderRequest.payment_context.payer,
-        chain: orderRequest.payment_context.chain,
-        txHash: orderRequest.payment_context.tx_hash
+        targetPyusd: triggerRequest.target_pyusd, 
+        vendorUpi: triggerRequest.vendor_upi
       },
       'Received order trigger request'
     );
 
-    const orderTrigger = await orderService.triggerOrder(orderRequest);
+    const orderTrigger = await orderService.triggerOrder(triggerRequest);
     res.status(200).json(orderTrigger);
 
   } catch (error) {

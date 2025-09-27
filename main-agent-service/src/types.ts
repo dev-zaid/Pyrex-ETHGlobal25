@@ -59,9 +59,15 @@ export interface OrderRequest {
   };
 }
 
+export interface TriggerRequest {
+  target_pyusd: string;
+  vendor_upi: string;
+}
+
 export interface OrderTrigger {
   id: string;
   target_pyusd: string;
+  vendor_upi: string;
   payer: string;
   tx_hash: string;
   timestamp: Date;
