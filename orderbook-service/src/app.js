@@ -1,10 +1,13 @@
 const express = require('express');
+const cors = require('cors');
 const morgan = require('morgan');
 const offersRouter = require('./routes/offers');
 const reservationsRouter = require('./routes/reservations');
 const adminRouter = require('./routes/admin');
 
 const app = express();
+
+app.use(cors());
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));
