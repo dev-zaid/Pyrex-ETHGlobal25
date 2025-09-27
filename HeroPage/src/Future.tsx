@@ -1,4 +1,5 @@
 import { cn } from "./lib/utils";
+import type { ReactNode } from "react";
 import {
   IconCloud,
   IconCurrencyDollar,
@@ -8,7 +9,12 @@ import {
   IconTerminal2,
 } from "@tabler/icons-react";
 
-export function Future() {
+type FutureProps = {
+  showHeading?: boolean;
+  className?: string;
+};
+
+export function Future({ showHeading = true, className }: FutureProps) {
   const features = [
     {
       title: "Rewards",
@@ -47,12 +53,15 @@ export function Future() {
       icon: <IconHelp />,
     },
   ];
+
   return (
-    <div className="w-full bg-black text-white py-16">
-      <div className="text-4xl text-white text-center my-20 font-bold">
-        Speculated Features
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 relative z-10 gap-0 px-6 max-w-7xl mx-auto">
+    <div className={cn("w-full bg-black text-white py-16", className)}>
+      {showHeading && (
+        <div className="my-20 text-center text-4xl font-bold text-white">
+          Speculated Features
+        </div>
+      )}
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-0 px-6 md:grid-cols-2 lg:grid-cols-3">
         {features.map((feature, index) => (
           <Feature key={feature.title} {...feature} index={index} />
         ))}
@@ -61,39 +70,36 @@ export function Future() {
   );
 }
 
-const Feature = ({
-  title,
-  description,
-  icon,
-  index,
-}: {
+type FeatureProps = {
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   index: number;
-}) => {
+};
+
+const Feature = ({ title, description, icon, index }: FeatureProps) => {
   return (
     <div
       className={cn(
-        "flex flex-col lg:border-r py-10 relative group/feature border-neutral-800",
-        (index === 0 || index === 4) && "lg:border-l border-neutral-800",
-        index < 4 && "lg:border-b border-neutral-800"
+        "relative flex flex-col py-10 group/feature border-neutral-800 lg:border-r",
+        (index === 0 || index === 3) && "lg:border-l",
+        index < 3 && "lg:border-b"
       )}
     >
-      {index < 4 && (
-        <div className="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-t from-neutral-900/80 to-transparent pointer-events-none" />
+      {index < 3 && (
+        <div className="pointer-events-none absolute inset-0 h-full w-full bg-gradient-to-t from-neutral-900/80 to-transparent opacity-0 transition duration-200 group-hover/feature:opacity-100" />
       )}
-      {index >= 4 && (
-        <div className="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-b from-neutral-900/80 to-transparent pointer-events-none" />
+      {index >= 3 && (
+        <div className="pointer-events-none absolute inset-0 h-full w-full bg-gradient-to-b from-neutral-900/80 to-transparent opacity-0 transition duration-200 group-hover/feature:opacity-100" />
       )}
-      <div className="mb-4 relative z-10 px-10 text-neutral-300">{icon}</div>
-      <div className="text-lg font-bold mb-2 relative z-10 px-10">
-        <div className="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-neutral-700 group-hover/feature:bg-blue-500 transition-all duration-200 origin-center" />
-        <span className="group-hover/feature:translate-x-2 transition duration-200 inline-block text-white">
+      <div className="relative z-10 mb-4 px-10 text-neutral-300">{icon}</div>
+      <div className="relative z-10 mb-2 px-10 text-lg font-bold">
+        <div className="absolute inset-y-0 left-0 w-1 origin-center rounded-tr-full rounded-br-full bg-neutral-700 transition-all duration-200 group-hover/feature:h-8 group-hover/feature:bg-blue-500" />
+        <span className="inline-block text-white transition duration-200 group-hover/feature:translate-x-2">
           {title}
         </span>
       </div>
-      <p className="text-sm text-neutral-300 max-w-xs relative z-10 px-10">
+      <p className="relative z-10 max-w-xs px-10 text-sm text-neutral-300">
         {description}
       </p>
     </div>

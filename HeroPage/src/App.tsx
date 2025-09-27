@@ -7,7 +7,7 @@ import UserPage from "./UserPage";
 import { TimelinePage } from "./Timeline";
 import Seller from "./Seller";
 // import FAQ from "./FAQ";
-import { Future } from "./Future";
+import FeatureFaqTabs from "./FeatureFaqTabs";
 import Footer from "./Footer";
 
 function App() {
@@ -20,10 +20,11 @@ function App() {
       {/* <UpiPage /> */}
       <Seller />
       {/* <FAQ /> */}
-      <Future />
+      <FeatureFaqTabs />
       <Footer />
     </>
   );
 }
 
 export default App;
+

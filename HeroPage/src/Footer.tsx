@@ -38,29 +38,8 @@ const Footer = () => {
   return (
     <FooterContainer>
       <FooterText>&copy; 2025 PyREX. All rights reserved.</FooterText>
-      <SocialIcons>
-        <SocialIcon
-          href="https://twitter.com"
-          target="_blank"
-          aria-label="Twitter"
-        >
-          <i className="fab fa-twitter"></i>
-        </SocialIcon>
-        <SocialIcon
-          href="https://github.com"
-          target="_blank"
-          aria-label="GitHub"
-        >
-          <i className="fab fa-github"></i>
-        </SocialIcon>
-        <SocialIcon
-          href="https://linkedin.com"
-          target="_blank"
-          aria-label="LinkedIn"
-        >
-          <i className="fab fa-linkedin"></i>
-        </SocialIcon>
-      </SocialIcons>
+      <div>Developed with Curiosity by</div>
+      <div>Archismaan Das | Ankush Dutta | Mohd Zaid | Ank Agarwal</div>
     </FooterContainer>
   );
 };

@@ -3,7 +3,7 @@ import self from "./assets/self.jpg";
 import logo from "./assets/icon.png";
 const Navbar = () => {
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 bg-black/80 backdrop-blur border-b border-white/10">
+    <nav className="w-1/2 mx-auto fixed inset-x-0 top-0 z-50 bg-black/60 backdrop-blur-2xl border-2 border-white/10 rounded-4xl mt-4">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 text-white">
         <div className="flex items-center gap-3">
           <img src={logo} alt="PyREX logo" className="h-8 w-8" />
