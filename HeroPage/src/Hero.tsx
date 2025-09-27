@@ -2,7 +2,6 @@
 import { useScroll, useTransform } from "motion/react";
 import React from "react";
 import { GoogleGeminiEffect } from "./components/ui/google-gemini-effect";
-// import { LayoutTextFlip } from "./components/ui/layout-text-flip";
 
 export function Hero() {
   const ref = React.useRef<HTMLDivElement | null>(null);
@@ -20,12 +19,11 @@ export function Hero() {
   return (
     <div
       ref={ref}
-      className="relative h-[400vh] w-full overflow-clip rounded-md bg-black pt-32 sm:pt-40 dark:border dark:border-white/[0.1]"
+      className="relative h-[200vh] w-full overflow-clip rounded-md bg-black pt-32 sm:pt-40 dark:border dark:border-white/[0.1]"
     >
       <div className="sticky top-48 z-40 flex justify-center">
         <div className="pointer-events-none flex flex-col items-center gap-4 text-center text-white">
           <h1 className="text-7xl font-semibold">Forex Simplified</h1>
-          {/* <LayoutTextFlip text="" words={["Drama", "Hassle"]} /> */}
           <p className="text-5xl font-semibold mt-64">Forever</p>
         </div>
       </div>
@@ -42,3 +40,4 @@ export function Hero() {
     </div>
   );
 }
+

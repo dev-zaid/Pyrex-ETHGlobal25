@@ -56,9 +56,9 @@ export const GoogleGeminiEffect = ({
   const fA2 = useTrim(a2);
   const fA3 = useTrim(a3);
 
-  const plA1 = useTransform(pathLengths[4], (v) => v * fA1.visible);
-  const plA2 = useTransform(pathLengths[4], (v) => v * fA2.visible);
-  const plA3 = useTransform(pathLengths[4], (v) => v * fA3.visible);
+  const plA1 = useTransform(pathLengths[4], (v) => v * fA1.visible * 2);
+  const plA2 = useTransform(pathLengths[4], (v) => v * fA2.visible * 2);
+  const plA3 = useTransform(pathLengths[4], (v) => v * fA3.visible * 2);
 
   const [coinPositions, setCoinPositions] = useState<
     { x: number; y: number }[]
