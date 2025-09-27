@@ -75,7 +75,7 @@ function Playground() {
             const app = new SelfAppBuilder({
                 appName: "Self Playground",
                 scope: "12345",
-                endpoint: "0xAa55A26E92A071562f312A8b557bA2BABb56ab31",
+                endpoint: "0x8D4c227b2565245bE80E0c48D93b71a91357F274",
                 // endpoint: "https://c622-118-169-75-84.ngrok-free.app/api/verify",
                 endpointType: "celo",
                 logoBase64: "https://i.imgur.com/Rz8B3s7.png",
