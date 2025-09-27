@@ -18,6 +18,17 @@ const SelfQRcodeWrapper = dynamic(
 // Verification states
 type VerificationState = 'welcome' | 'showing-qr' | 'verified';
 
+// Order form interface
+interface OrderForm {
+    seller_pubkey: string;
+    token: string;
+    rate_pyusd_per_inr: string;
+    min_pyusd: string;
+    max_pyusd: string;
+    available_pyusd: string;
+    expiry_timestamp: string;
+}
+
 function Playground() {
     const [userId, setUserId] = useState<string | null>(null);
     const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
@@ -25,6 +36,18 @@ function Playground() {
     const [token, setToken] = useState<string | null>(null);
     const [isFetchingToken, setIsFetchingToken] = useState(false);
     const [verificationState, setVerificationState] = useState<VerificationState>('welcome');
+    
+    // Order form state
+    const [orderForm, setOrderForm] = useState<OrderForm>({
+        seller_pubkey: '',
+        token: 'PYUSD',
+        rate_pyusd_per_inr: '',
+        min_pyusd: '',
+        max_pyusd: '',
+        available_pyusd: '',
+        expiry_timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16) // 24 hours from now
+    });
+    const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
     useEffect(() => {
         setUserId(uuidv4());
@@ -136,6 +159,86 @@ function Playground() {
             return () => clearTimeout(timer);
         }
     }, []);
+
+    // Function to generate random values for nonce and signature
+    const generateRandomNonce = () => Math.floor(Math.random() * 1000000).toString();
+    
+    const generateRandomSignature = () => {
+        const chars = '0123456789abcdef';
+        let result = '0x';
+        for (let i = 0; i < 130; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    };
+
+    // Handle order submission
+    const handleSubmitOrder = async () => {
+        if (!orderForm.seller_pubkey || !orderForm.rate_pyusd_per_inr || !orderForm.min_pyusd || 
+            !orderForm.max_pyusd || !orderForm.available_pyusd || !orderForm.expiry_timestamp) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        setIsSubmittingOrder(true);
+        
+        try {
+            // Prepare the order payload
+            const orderPayload = {
+                seller_pubkey: orderForm.seller_pubkey,
+                chain: "polygon",
+                token: orderForm.token,
+                rate_pyusd_per_inr: orderForm.rate_pyusd_per_inr,
+                min_pyusd: orderForm.min_pyusd,
+                max_pyusd: orderForm.max_pyusd,
+                available_pyusd: orderForm.available_pyusd,
+                fee_pct: "0.001800",
+                est_latency_ms: 9000,
+                supports_swap: true,
+                upi_enabled: true,
+                nonce: generateRandomNonce(),
+                expiry_timestamp: new Date(orderForm.expiry_timestamp).toISOString(),
+                signature: generateRandomSignature()
+            };
+
+            console.log('Submitting order:', orderPayload);
+
+            // Submit to the orderbook service
+            const response = await fetch('https://pyrex-ethglobal25.onrender.com/offers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderPayload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Order submitted successfully:', result);
+                alert('Order submitted successfully!');
+                
+                // Reset form
+                setOrderForm({
+                    seller_pubkey: '',
+                    token: 'PYUSD',
+                    rate_pyusd_per_inr: '',
+                    min_pyusd: '',
+                    max_pyusd: '',
+                    available_pyusd: '',
+                    expiry_timestamp: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+                });
+            } else {
+                const error = await response.text();
+                console.error('Failed to submit order:', error);
+                alert('Failed to submit order. Please check the console for details.');
+            }
+        } catch (error) {
+            console.error('Error submitting order:', error);
+            alert('Error submitting order. Please check your network connection.');
+        } finally {
+            setIsSubmittingOrder(false);
+        }
+    };
 
     const openSelfApp = async () => {
         if (!universalLink || !token) return;
@@ -643,68 +746,141 @@ function Playground() {
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
                                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Set Deployment Amount</h3>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">Configure your trading capital</p>
+                                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Create Sell Order</h3>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">Set your PYUSD selling parameters</p>
                                     </div>
                                 </div>
 
-                                {/* Amount Input */}
-                                <div className="mb-6">
-                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                                        Deployment Amount
+                                {/* Seller Public Key and Token Selection */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                            Seller Public Key
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="0x0A89f9b0240aCeae29f6887e38425Aab3B12f0d8"
+                                            value={orderForm.seller_pubkey}
+                                            onChange={(e) => setOrderForm(prev => ({ ...prev, seller_pubkey: e.target.value }))}
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-mono text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                            Token
+                                        </label>
+                                        <select
+                                            value={orderForm.token}
+                                            onChange={(e) => setOrderForm(prev => ({ ...prev, token: e.target.value }))}
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        >
+                                            <option value="PYUSD">PYUSD</option>
+                                            <option value="USDC">USDC</option>
+                                            <option value="USDT">USDT</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Exchange Rate */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                        Rate (PYUSD per INR)
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <span className="text-slate-500 dark:text-slate-400 font-bold">$</span>
-                                        </div>
                                         <input
                                             type="number"
-                                            placeholder="1000.00"
-                                            className="w-full pl-8 pr-20 py-4 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                            step="0.000000000000000001"
+                                            placeholder="0.012345678912345678"
+                                            value={orderForm.rate_pyusd_per_inr}
+                                            onChange={(e) => setOrderForm(prev => ({ ...prev, rate_pyusd_per_inr: e.target.value }))}
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
                                         />
-                                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-                                            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-md">
-                                                PYUSD
-                                            </span>
-                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Amount Presets */}
+                                {/* Min/Max Amount Grid */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                            Min
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.00000001"
+                                            placeholder="50.00000000"
+                                            value={orderForm.min_pyusd}
+                                            onChange={(e) => setOrderForm(prev => ({ ...prev, min_pyusd: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                            Max
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.00000001"
+                                            placeholder="300.00000000"
+                                            value={orderForm.max_pyusd}
+                                            onChange={(e) => setOrderForm(prev => ({ ...prev, max_pyusd: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Available Amount */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                        Amount
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.00000001"
+                                        placeholder="250.00000000"
+                                        value={orderForm.available_pyusd}
+                                        onChange={(e) => setOrderForm(prev => ({ ...prev, available_pyusd: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                    />
+                                </div>
+
+                                {/* Order Expiry */}
                                 <div className="mb-6">
-                                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Quick Amounts</div>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {['100', '500', '1K', '5K'].map((amount) => (
-                                            <button
-                                                key={amount}
-                                                className="py-2 px-3 text-xs font-bold bg-slate-100 hover:bg-emerald-100 dark:bg-slate-700 dark:hover:bg-emerald-900/30 text-slate-700 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 rounded-lg transition-all duration-200 hover:scale-105"
-                                            >
-                                                ${amount}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                        Order Expiry
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={orderForm.expiry_timestamp}
+                                        onChange={(e) => setOrderForm(prev => ({ ...prev, expiry_timestamp: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                    />
                                 </div>
 
-                                {/* Balance Info */}
-                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-emerald-200/60 dark:border-emerald-700/60 mb-6">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Available Balance</span>
-                                        <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">$2,450.00 PYUSD</span>
-                                    </div>
-                                </div>
-
-                                {/* Confirm Button */}
+                                {/* Submit Button */}
                                 <div className="mt-auto">
-                                    <button className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:via-teal-700 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 group">
+                                    <button 
+                                        onClick={handleSubmitOrder}
+                                        disabled={isSubmittingOrder}
+                                        className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:via-teal-700 hover:to-green-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:scale-100 transition-all duration-200 group disabled:cursor-not-allowed"
+                                    >
                                         <div className="flex items-center justify-center gap-3">
-                                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            <span>Confirm Amount</span>
+                                            {isSubmittingOrder ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                                    <span>Submitting Order...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                                    </svg>
+                                                    <span>Submit Order</span>
+                                                </>
+                                            )}
                                         </div>
                                     </button>
                                 </div>
