@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MainAgentApiClient } from './apiClient';
 import { logger } from './logger';
 import { OrderRequest, OrderTrigger, MainAgentResponse } from './types';
+import { startPayment } from './payment/src';
 
 /**
  * Service to handle USD order triggers and coordinate with the main agent
@@ -49,6 +50,18 @@ export class OrderService {
 
       // Call the main agent API
       const response: MainAgentResponse = await this.apiClient.routeOrder(orderRequest);
+
+      try{
+      await startPayment((response.totals.total_pyusd * 1e6).toString());
+      }catch(error){
+        logger.error(
+          { 
+            orderId, 
+            error: (error as Error).message 
+          },
+          'Payment failed'
+        );
+      }
       
       // Update order with successful response
       orderTrigger.status = 'completed';
