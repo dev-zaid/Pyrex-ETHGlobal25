@@ -4,12 +4,12 @@ jest.mock('../src/clients/orderbook', () => ({
   fetchReservation: jest.fn(),
 }));
 
-jest.mock('../src/clients/razorpay', () => ({
-  createUpiPayment: jest.fn(),
+jest.mock('../src/clients/cashfree', () => ({
+  createDirectTransfer: jest.fn(),
 }));
 
 const { fetchReservation } = require('../src/clients/orderbook');
-const { createUpiPayment } = require('../src/clients/razorpay');
+const { createDirectTransfer } = require('../src/clients/cashfree');
 
 describe('fulfillmentService', () => {
   beforeEach(() => {
@@ -28,27 +28,33 @@ describe('fulfillmentService', () => {
 
   it('returns Razorpay response on success', async () => {
     fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'pending' });
-    createUpiPayment.mockResolvedValue({ id: 'pay_123', status: 'captured', amount: 1000, currency: 'INR' });
+    createDirectTransfer.mockResolvedValue({ referenceId: 'payout_123', status: 'SUCCESS', amount: 10 });
 
     const result = await fulfillOrder({ orderId: 'res-1', amount: 10 });
 
-    expect(createUpiPayment).toHaveBeenCalledWith({
-      amount: 1000,
-      currency: 'INR',
-      upi: { vpa: 'success@upi' },
-      reference_id: 'res-1',
+    expect(createDirectTransfer).toHaveBeenCalledWith({
+      transferMode: 'upi',
+      amount: 10,
+      transferId: 'res-1',
+      beneDetails: {
+        name: 'Hackathon Seller',
+        phone: '9999999999',
+        email: 'johndoe_1@cashfree.com',
+        address1: 'Becharam Chatterjee Road',
+        vpa: 'success@upi',
+      },
     });
     expect(result).toEqual({
       reservationId: 'res-1',
       amount: 10,
-      razorpay: { payment_id: 'pay_123', status: 'captured' },
+      cashfree: { reference_id: 'payout_123', status: 'SUCCESS' },
     });
   });
 
   it('throws user-friendly error when Razorpay fails', async () => {
     fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'pending' });
-    createUpiPayment.mockRejectedValue(new Error('network error'));
+    createDirectTransfer.mockRejectedValue(new Error('network error'));
 
-    await expect(fulfillOrder({ orderId: 'res-1', amount: 10 })).rejects.toThrow('Razorpay transaction failed');
+    await expect(fulfillOrder({ orderId: 'res-1', amount: 10 })).rejects.toThrow('Cashfree transaction failed');
   });
 });

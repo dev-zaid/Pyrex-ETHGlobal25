@@ -1,11 +1,11 @@
 import request from 'supertest';
 import app from '../src/index';
 
-jest.mock('../src/services/fulfillmentService', () => ({
-  fulfillOrder: jest.fn(),
+jest.mock('../src/services/orderProcessor', () => ({
+  scheduleFulfillment: jest.fn(),
 }));
 
-const { fulfillOrder } = require('../src/services/fulfillmentService');
+const { scheduleFulfillment } = require('../src/services/orderProcessor');
 
 describe('POST /fulfill-order', () => {
   beforeEach(() => {
@@ -23,10 +23,10 @@ describe('POST /fulfill-order', () => {
   });
 
   it('returns fulfillment result on success', async () => {
-    fulfillOrder.mockResolvedValue({
+    scheduleFulfillment.mockResolvedValue({
       reservationId: 'res-1',
       amount: 10,
-      razorpay: { payment_id: 'pay_123', status: 'captured' },
+      cashfree: { reference_id: 'payout_123', status: 'SUCCESS' },
     });
 
     const res = await request(app).post('/fulfill-order').send({ order_id: 'res-1', amount: 10 });
@@ -35,14 +35,14 @@ describe('POST /fulfill-order', () => {
       audit_id: 'order-res-1',
       reservation_id: 'res-1',
       requested_amount: 10,
-      razorpay: { payment_id: 'pay_123', status: 'captured' },
+      cashfree: { reference_id: 'payout_123', status: 'SUCCESS' },
     });
   });
 
   it('propagates fulfillment errors with proper status code', async () => {
-    fulfillOrder.mockRejectedValue(new Error('Razorpay transaction failed'));
+    scheduleFulfillment.mockRejectedValue(new Error('Cashfree transaction failed'));
     const res = await request(app).post('/fulfill-order').send({ order_id: 'res-1', amount: 10 });
     expect(res.status).toBe(502);
-    expect(res.body).toEqual({ error: 'Razorpay transaction failed' });
+    expect(res.body).toEqual({ error: 'Cashfree transaction failed' });
   });
 });

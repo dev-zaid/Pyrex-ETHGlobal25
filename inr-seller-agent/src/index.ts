@@ -1,7 +1,7 @@
 import express from 'express';
 import { json } from 'body-parser';
 import { logger } from './utils/logger';
-import { fulfillOrder } from './services/fulfillmentService';
+import { scheduleFulfillment } from './services/orderProcessor';
 
 const app = express();
 app.use(json());
@@ -18,17 +18,17 @@ app.post('/fulfill-order', async (req, res) => {
 
   try {
     const parsedAmount = Number(amount);
-    const result = await fulfillOrder({ orderId: order_id, amount: parsedAmount });
+    const result = await scheduleFulfillment({ orderId: order_id, amount: parsedAmount });
     return res.json({
       audit_id: `order-${result.reservationId}`,
       reservation_id: result.reservationId,
       requested_amount: parsedAmount,
-      razorpay: result.razorpay,
+      cashfree: result.cashfree,
     });
   } catch (error) {
     const message = (error as Error).message;
     logger.error({ error }, 'Order fulfillment failed');
-    const status = message === 'Razorpay transaction failed' ? 502 : 400;
+    const status = message === 'Cashfree transaction failed' ? 502 : 400;
     return res.status(status).json({ error: message });
   }
 });

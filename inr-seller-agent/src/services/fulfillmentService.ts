@@ -1,6 +1,6 @@
 import { fetchReservation } from '../clients/orderbook';
 import { logger } from '../utils/logger';
-import { createUpiPayment } from '../clients/razorpay';
+import { createDirectTransfer } from '../clients/cashfree';
 
 export interface FulfillmentRequest {
   orderId: string;
@@ -15,8 +15,8 @@ export interface ReservationCheck {
 export interface FulfillmentResult {
   reservationId: string;
   amount: number;
-  razorpay: {
-    payment_id: string;
+  cashfree: {
+    reference_id: string;
     status: string;
   };
 }
@@ -43,26 +43,32 @@ export async function validateReservation({ orderId, amount }: FulfillmentReques
 export async function fulfillOrder(request: FulfillmentRequest): Promise<FulfillmentResult> {
   const { reservationId } = await validateReservation(request);
 
-  const amountInPaise = Math.round(request.amount * 100);
-  let razorpayResponse;
+  const transferId = reservationId;
+  let transferResponse;
   try {
-    razorpayResponse = await createUpiPayment({
-      amount: amountInPaise,
-      currency: 'INR',
-      upi: { vpa: 'success@upi' },
-      reference_id: reservationId,
+    transferResponse = await createDirectTransfer({
+      transferMode: 'upi',
+      amount: request.amount,
+      transferId,
+      beneDetails: {
+        name: 'Hackathon Seller',
+        phone: '9999999999',
+        email: 'johndoe_1@cashfree.com',
+        address1: 'Becharam Chatterjee Road',
+        vpa: 'success@upi',
+      },
     });
   } catch (error) {
-    logger.error({ error }, 'Razorpay payment failed');
-    throw new Error('Razorpay transaction failed');
+    logger.error({ error }, 'Cashfree transfer failed');
+    throw new Error('Cashfree transaction failed');
   }
 
   return {
     reservationId,
     amount: request.amount,
-    razorpay: {
-      payment_id: razorpayResponse.id,
-      status: razorpayResponse.status,
+    cashfree: {
+      reference_id: transferResponse.referenceId,
+      status: transferResponse.status,
     },
   };
 }
