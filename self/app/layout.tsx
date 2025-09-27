@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,8 +14,26 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Self Playground",
-  description: "Self Playground",
+  title: "Pyrex Trading - Secure Crypto Trading Platform",
+  description: "Secure, verified, and decentralized crypto trading platform powered by Self cryptographic verification",
+  keywords: "crypto trading, secure trading, Self verification, decentralized, PYUSD, INR",
+  authors: [{ name: "Pyrex Team" }],
+  creator: "Pyrex Trading",
+  publisher: "Pyrex Trading",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
 };
 
 export default function RootLayout({
@@ -23,11 +42,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="theme-color" content="#ffffff" />
+      </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider defaultTheme="system" storageKey="pyrex-theme">
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
