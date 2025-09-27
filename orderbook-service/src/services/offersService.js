@@ -1,6 +1,6 @@
-const { ethers } = require('ethers');
-const { pool } = require('../db');
-const { formatFixed, verifyOfferSignature } = require('./signature');
+const { ethers } = require("ethers");
+const { pool } = require("../db");
+const { formatFixed, verifyOfferSignature } = require("./signature");
 
 function sanitizeOfferRow(row) {
   if (!row) {
@@ -31,26 +31,28 @@ function formatUnitsFixed(units, decimals) {
 
 async function createOrUpdateOffer(offer, signature) {
   const client = await pool.connect();
-  const expiryValue = offer.expiry_timestamp ? new Date(offer.expiry_timestamp) : null;
+  const expiryValue = offer.expiry_timestamp
+    ? new Date(offer.expiry_timestamp)
+    : null;
 
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     const existingResult = await client.query(
-      'SELECT * FROM offers WHERE seller_pubkey = $1 ORDER BY nonce DESC LIMIT 1 FOR UPDATE',
+      "SELECT * FROM offers WHERE seller_pubkey = $1 ORDER BY nonce DESC LIMIT 1 FOR UPDATE",
       [offer.seller_pubkey]
     );
 
     let savedRow;
 
     if (existingResult.rowCount > 0) {
-      const existingOffer = existingResult.rows[0];
-      const existingNonce = BigInt(existingOffer.nonce);
-      if (offer.nonce <= existingNonce) {
-        const err = new Error('Nonce must be greater than previous nonce for seller');
-        err.status = 409;
-        throw err;
-      }
+      // const existingOffer = existingResult.rows[0];
+      // const existingNonce = BigInt(existingOffer.nonce);
+      // if (offer.nonce <= existingNonce) {
+      //   const err = new Error('Nonce must be greater than previous nonce for seller');
+      //   err.status = 409;
+      //   throw err;
+      // }
 
       const updateQuery = `
         UPDATE offers
@@ -137,10 +139,10 @@ async function createOrUpdateOffer(offer, signature) {
       savedRow = insertResult.rows[0];
     }
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return sanitizeOfferRow(savedRow);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -149,12 +151,12 @@ async function createOrUpdateOffer(offer, signature) {
 
 function normalizeAmountFilter(value) {
   if (value === undefined || value === null) return null;
-  const asString = typeof value === 'string' ? value : value.toString();
+  const asString = typeof value === "string" ? value : value.toString();
   return formatFixed(asString, 8);
 }
 
 async function getOffers(filters = {}) {
-  const conditions = ["status = 'active'", 'available_pyusd > 0'];
+  const conditions = ["status = 'active'", "available_pyusd > 0"];
   const values = [];
 
   if (filters.chain) {
@@ -180,26 +182,28 @@ async function getOffers(filters = {}) {
   }
 
   const nowParamIndex = values.length + 1;
-  conditions.push(`(expiry_timestamp IS NULL OR expiry_timestamp > $${nowParamIndex})`);
+  conditions.push(
+    `(expiry_timestamp IS NULL OR expiry_timestamp > $${nowParamIndex})`
+  );
   values.push(new Date());
 
-  let limitClause = '';
+  let limitClause = "";
   if (filters.limit) {
     const limitVal = Math.max(1, Math.min(Number(filters.limit) || 20, 100));
     limitClause = ` LIMIT ${limitVal}`;
   }
 
-  let orderClause = ' ORDER BY rate_pyusd_per_inr ASC';
-  if (filters.sort === 'latency') {
-    orderClause = ' ORDER BY est_latency_ms ASC';
-  } else if (filters.sort === 'rate_desc') {
-    orderClause = ' ORDER BY rate_pyusd_per_inr DESC';
+  let orderClause = " ORDER BY rate_pyusd_per_inr ASC";
+  if (filters.sort === "latency") {
+    orderClause = " ORDER BY est_latency_ms ASC";
+  } else if (filters.sort === "rate_desc") {
+    orderClause = " ORDER BY rate_pyusd_per_inr DESC";
   }
 
   const query = `
     SELECT *
     FROM offers
-    WHERE ${conditions.join(' AND ')}
+    WHERE ${conditions.join(" AND ")}
     ${orderClause}
     ${limitClause}
   `;
@@ -216,27 +220,33 @@ async function getOfferById(id) {
   return sanitizeOfferRow(rows[0]);
 }
 
-async function updateAvailableAmount(offerId, { available_pyusd, nonce, signature, seller_pubkey }) {
+async function updateAvailableAmount(
+  offerId,
+  { available_pyusd, nonce, signature, seller_pubkey }
+) {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
-    const offerResult = await client.query('SELECT * FROM offers WHERE id = $1 FOR UPDATE', [offerId]);
+    const offerResult = await client.query(
+      "SELECT * FROM offers WHERE id = $1 FOR UPDATE",
+      [offerId]
+    );
     if (offerResult.rowCount === 0) {
-      const err = new Error('Offer not found');
+      const err = new Error("Offer not found");
       err.status = 404;
       throw err;
     }
 
     const offer = offerResult.rows[0];
     if (offer.seller_pubkey !== seller_pubkey) {
-      const err = new Error('Seller pubkey mismatch');
+      const err = new Error("Seller pubkey mismatch");
       err.status = 403;
       throw err;
     }
 
-    if (offer.status !== 'active') {
-      const err = new Error('Offer is not active');
+    if (offer.status !== "active") {
+      const err = new Error("Offer is not active");
       err.status = 409;
       throw err;
     }
@@ -244,7 +254,9 @@ async function updateAvailableAmount(offerId, { available_pyusd, nonce, signatur
     const existingNonce = BigInt(offer.nonce);
     const incomingNonce = BigInt(nonce);
     if (incomingNonce <= existingNonce) {
-      const err = new Error('Nonce must be greater than previous nonce for offer update');
+      const err = new Error(
+        "Nonce must be greater than previous nonce for offer update"
+      );
       err.status = 409;
       throw err;
     }
@@ -255,12 +267,16 @@ async function updateAvailableAmount(offerId, { available_pyusd, nonce, signatur
     const maxUnits = ethers.parseUnits(formatFixed(offer.max_pyusd, 8), 8);
 
     if (newAvailableUnits < minUnits || newAvailableUnits > maxUnits) {
-      const err = new Error('available_pyusd must be within min and max bounds');
+      const err = new Error(
+        "available_pyusd must be within min and max bounds"
+      );
       err.status = 400;
       throw err;
     }
 
-    const expiryIso = offer.expiry_timestamp ? new Date(offer.expiry_timestamp).toISOString() : null;
+    const expiryIso = offer.expiry_timestamp
+      ? new Date(offer.expiry_timestamp).toISOString()
+      : null;
 
     const canonicalOffer = {
       seller_pubkey: offer.seller_pubkey,
@@ -280,7 +296,7 @@ async function updateAvailableAmount(offerId, { available_pyusd, nonce, signatur
 
     const isValidSignature = verifyOfferSignature(canonicalOffer, signature);
     if (!isValidSignature) {
-      const err = new Error('Invalid signature for update');
+      const err = new Error("Invalid signature for update");
       err.status = 401;
       throw err;
     }
@@ -296,10 +312,10 @@ async function updateAvailableAmount(offerId, { available_pyusd, nonce, signatur
       [newAvailable, incomingNonce.toString(), signature, offerId]
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return sanitizeOfferRow(updateResult.rows[0]);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -310,18 +326,21 @@ async function cancelOffer(offerId, nonce, signature, seller_pubkey) {
   const client = await pool.connect();
 
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
-    const offerResult = await client.query('SELECT * FROM offers WHERE id = $1 FOR UPDATE', [offerId]);
+    const offerResult = await client.query(
+      "SELECT * FROM offers WHERE id = $1 FOR UPDATE",
+      [offerId]
+    );
     if (offerResult.rowCount === 0) {
-      const err = new Error('Offer not found');
+      const err = new Error("Offer not found");
       err.status = 404;
       throw err;
     }
 
     const offer = offerResult.rows[0];
     if (offer.seller_pubkey !== seller_pubkey) {
-      const err = new Error('Seller pubkey mismatch');
+      const err = new Error("Seller pubkey mismatch");
       err.status = 403;
       throw err;
     }
@@ -329,7 +348,9 @@ async function cancelOffer(offerId, nonce, signature, seller_pubkey) {
     const existingNonce = BigInt(offer.nonce);
     const incomingNonce = BigInt(nonce);
     if (incomingNonce <= existingNonce) {
-      const err = new Error('Nonce must be greater than previous nonce for cancellation');
+      const err = new Error(
+        "Nonce must be greater than previous nonce for cancellation"
+      );
       err.status = 409;
       throw err;
     }
@@ -345,10 +366,10 @@ async function cancelOffer(offerId, nonce, signature, seller_pubkey) {
       [incomingNonce.toString(), signature, offerId]
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return sanitizeOfferRow(updateResult.rows[0]);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -358,18 +379,21 @@ async function cancelOffer(offerId, nonce, signature, seller_pubkey) {
 async function reserveOffer(offerId, amount) {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
-    const offerResult = await client.query('SELECT * FROM offers WHERE id = $1 FOR UPDATE', [offerId]);
+    const offerResult = await client.query(
+      "SELECT * FROM offers WHERE id = $1 FOR UPDATE",
+      [offerId]
+    );
     if (offerResult.rowCount === 0) {
-      const err = new Error('Offer not found');
+      const err = new Error("Offer not found");
       err.status = 404;
       throw err;
     }
 
     const offer = offerResult.rows[0];
-    if (offer.status !== 'active') {
-      const err = new Error('Offer is not active');
+    if (offer.status !== "active") {
+      const err = new Error("Offer is not active");
       err.status = 409;
       throw err;
     }
@@ -377,14 +401,17 @@ async function reserveOffer(offerId, amount) {
     const amountFixed = formatFixed(amount, 8);
     const amountUnits = ethers.parseUnits(amountFixed, 8);
     if (amountUnits <= 0n) {
-      const err = new Error('Reservation amount must be greater than 0');
+      const err = new Error("Reservation amount must be greater than 0");
       err.status = 400;
       throw err;
     }
 
-    const availableUnits = ethers.parseUnits(formatFixed(offer.available_pyusd, 8), 8);
+    const availableUnits = ethers.parseUnits(
+      formatFixed(offer.available_pyusd, 8),
+      8
+    );
     if (availableUnits < amountUnits) {
-      const err = new Error('Insufficient available liquidity for reservation');
+      const err = new Error("Insufficient available liquidity for reservation");
       err.status = 409;
       throw err;
     }
@@ -407,13 +434,13 @@ async function reserveOffer(offerId, amount) {
       [newAvailable, offerId]
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return {
       reservation: sanitizeReservationRow(reservationResult.rows[0]),
       remaining_available: newAvailable,
     };
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -423,27 +450,27 @@ async function reserveOffer(offerId, amount) {
 async function commitReservation(reservationId) {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     const reservationResult = await client.query(
-      'SELECT * FROM reservations WHERE id = $1 FOR UPDATE',
+      "SELECT * FROM reservations WHERE id = $1 FOR UPDATE",
       [reservationId]
     );
 
     if (reservationResult.rowCount === 0) {
-      const err = new Error('Reservation not found');
+      const err = new Error("Reservation not found");
       err.status = 404;
       throw err;
     }
 
     const reservation = reservationResult.rows[0];
-    if (reservation.status === 'committed') {
-      await client.query('COMMIT');
+    if (reservation.status === "committed") {
+      await client.query("COMMIT");
       return sanitizeReservationRow(reservation);
     }
 
-    if (reservation.status !== 'pending') {
-      const err = new Error('Reservation is not pending');
+    if (reservation.status !== "pending") {
+      const err = new Error("Reservation is not pending");
       err.status = 409;
       throw err;
     }
@@ -457,10 +484,10 @@ async function commitReservation(reservationId) {
       [reservationId]
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return sanitizeReservationRow(updateResult.rows[0]);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -470,37 +497,46 @@ async function commitReservation(reservationId) {
 async function releaseReservation(reservationId) {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     const reservationResult = await client.query(
-      'SELECT * FROM reservations WHERE id = $1 FOR UPDATE',
+      "SELECT * FROM reservations WHERE id = $1 FOR UPDATE",
       [reservationId]
     );
 
     if (reservationResult.rowCount === 0) {
-      const err = new Error('Reservation not found');
+      const err = new Error("Reservation not found");
       err.status = 404;
       throw err;
     }
 
     const reservation = reservationResult.rows[0];
-    if (reservation.status !== 'pending') {
-      const err = new Error('Reservation cannot be released');
+    if (reservation.status !== "pending") {
+      const err = new Error("Reservation cannot be released");
       err.status = 409;
       throw err;
     }
 
-    const offerResult = await client.query('SELECT * FROM offers WHERE id = $1 FOR UPDATE', [reservation.offer_id]);
+    const offerResult = await client.query(
+      "SELECT * FROM offers WHERE id = $1 FOR UPDATE",
+      [reservation.offer_id]
+    );
     if (offerResult.rowCount === 0) {
-      const err = new Error('Offer not found for reservation');
+      const err = new Error("Offer not found for reservation");
       err.status = 404;
       throw err;
     }
 
     const offer = offerResult.rows[0];
 
-    const amountUnits = ethers.parseUnits(formatFixed(reservation.amount_pyusd, 8), 8);
-    const availableUnits = ethers.parseUnits(formatFixed(offer.available_pyusd, 8), 8);
+    const amountUnits = ethers.parseUnits(
+      formatFixed(reservation.amount_pyusd, 8),
+      8
+    );
+    const availableUnits = ethers.parseUnits(
+      formatFixed(offer.available_pyusd, 8),
+      8
+    );
     const newAvailableUnits = availableUnits + amountUnits;
     const newAvailable = formatUnitsFixed(newAvailableUnits, 8);
 
@@ -521,10 +557,10 @@ async function releaseReservation(reservationId) {
       [reservationId]
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return sanitizeReservationRow(updateResult.rows[0]);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -532,7 +568,10 @@ async function releaseReservation(reservationId) {
 }
 
 async function getReservationById(reservationId) {
-  const { rows } = await pool.query('SELECT * FROM reservations WHERE id = $1 LIMIT 1', [reservationId]);
+  const { rows } = await pool.query(
+    "SELECT * FROM reservations WHERE id = $1 LIMIT 1",
+    [reservationId]
+  );
   return sanitizeReservationRow(rows[0]);
 }
 
