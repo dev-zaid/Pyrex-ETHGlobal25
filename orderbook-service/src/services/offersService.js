@@ -46,7 +46,7 @@ async function createOrUpdateOffer(offer, signature) {
     let savedRow;
 
     if (existingResult.rowCount > 0) {
-      // const existingOffer = existingResult.rows[0];
+      const existingOffer = existingResult.rows[0];
       // const existingNonce = BigInt(existingOffer.nonce);
       // if (offer.nonce <= existingNonce) {
       //   const err = new Error('Nonce must be greater than previous nonce for seller');
