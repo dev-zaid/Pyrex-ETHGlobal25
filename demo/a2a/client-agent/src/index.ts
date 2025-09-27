@@ -1,4 +1,4 @@
-import { sendMessage } from './a2a.js';
+import { sendMessage } from './a2a';
 
 export async function main() {
   const SERVICE_AGENT_URL = process.env.SERVICE_AGENT_URL || 'http://localhost:5402';
