@@ -1,4 +1,5 @@
 import { fulfillOrder } from '../src/services/fulfillmentService';
+import { CashfreeApiError, CashfreeFulfillmentError } from '../src/errors';
 
 jest.mock('../src/clients/orderbook', () => ({
   fetchReservation: jest.fn(),
@@ -58,10 +59,36 @@ describe('fulfillmentService', () => {
     });
   });
 
-  it('throws user-friendly error when Cashfree fails', async () => {
+  it('wraps Cashfree API errors with details', async () => {
+    fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'pending' });
+    createDirectTransfer.mockRejectedValue(
+      new CashfreeApiError('Token is not valid', {
+        provider_status: 'ERROR',
+        provider_sub_code: '403',
+        provider_message: 'Token is not valid',
+      }),
+    );
+
+    await expect(fulfillOrder({ orderId: 'res-1' })).rejects.toMatchObject({
+      message: 'Cashfree transaction failed',
+      details: {
+        provider_status: 'ERROR',
+        provider_sub_code: '403',
+        provider_message: 'Token is not valid',
+      },
+    });
+  });
+
+  it('throws user-friendly error when Cashfree unexpectedly fails', async () => {
     fetchReservation.mockResolvedValue({ id: 'res-1', amount_pyusd: '10', status: 'pending' });
     createDirectTransfer.mockRejectedValue(new Error('network error'));
 
-    await expect(fulfillOrder({ orderId: 'res-1' })).rejects.toThrow('Cashfree transaction failed');
+    const promise = fulfillOrder({ orderId: 'res-1' });
+
+    await expect(promise).rejects.toBeInstanceOf(CashfreeFulfillmentError);
+    await expect(promise).rejects.toMatchObject({
+      message: 'Cashfree transaction failed',
+      details: {},
+    });
   });
 });

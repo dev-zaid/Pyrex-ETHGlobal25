@@ -3,6 +3,7 @@ import cors from 'cors';
 import { json } from 'body-parser';
 import { logger } from './utils/logger';
 import { scheduleFulfillment } from './services/orderProcessor';
+import { CashfreeFulfillmentError } from './errors';
 
 const app = express();
 app.use(cors());
@@ -32,10 +33,14 @@ app.post('/fulfill-order', async (req, res) => {
       cashfree: result.cashfree,
     });
   } catch (error) {
-    const message = (error as Error).message;
     logger.error({ error }, 'Order fulfillment failed');
-    const status = message === 'Cashfree transaction failed' ? 502 : 400;
-    return res.status(status).json({ error: message });
+
+    if (error instanceof CashfreeFulfillmentError) {
+      return res.status(error.statusCode).json({ error: error.message, details: error.details });
+    }
+
+    const message = (error as Error).message;
+    return res.status(400).json({ error: message });
   }
 });
 

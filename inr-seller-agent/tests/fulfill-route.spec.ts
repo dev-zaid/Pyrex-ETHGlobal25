@@ -1,5 +1,6 @@
 import request from 'supertest';
 import app from '../src/index';
+import { CashfreeFulfillmentError } from '../src/errors';
 
 jest.mock('../src/services/orderProcessor', () => ({
   scheduleFulfillment: jest.fn(),
@@ -54,9 +55,20 @@ describe('POST /fulfill-order', () => {
   });
 
   it('propagates fulfillment errors with proper status code', async () => {
-    scheduleFulfillment.mockRejectedValue(new Error('Cashfree transaction failed'));
+    scheduleFulfillment.mockRejectedValue(
+      new CashfreeFulfillmentError('Cashfree transaction failed', {
+        provider_message: 'Token is not valid',
+        provider_status: 'ERROR',
+      }),
+    );
     const res = await request(app).post('/fulfill-order').send({ order_id: 'res-1' });
     expect(res.status).toBe(502);
-    expect(res.body).toEqual({ error: 'Cashfree transaction failed' });
+    expect(res.body).toEqual({
+      error: 'Cashfree transaction failed',
+      details: {
+        provider_message: 'Token is not valid',
+        provider_status: 'ERROR',
+      },
+    });
   });
 });
