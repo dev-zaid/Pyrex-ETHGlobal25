@@ -48,14 +48,8 @@ export interface MainAgentResponse {
 
 export interface OrderRequest {
   target_pyusd: string;
-  constraints: {
-    max_latency_ms: number;
-    max_fee_pct: number;
-  };
   payment_context: {
     chain: string;
-    payer: string;
-    tx_hash: string;
   };
 }
 

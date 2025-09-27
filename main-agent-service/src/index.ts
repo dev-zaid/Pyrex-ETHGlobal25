@@ -12,7 +12,7 @@ app.use(express.json({ limit: '1mb' }));
 const orderService = new OrderService();
 
 // Initialize the PayPal poller
-const paypalPoller = new PaypalPoller(orderService, 'http://localhost:3031', 1000);
+const paypalPoller = new PaypalPoller(orderService, 'http://localhost:3030/kvstore', 1000);
 
 // Health check endpoint
 app.get('/health', async (_req, res) => {

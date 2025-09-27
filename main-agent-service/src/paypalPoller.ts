@@ -13,6 +13,7 @@ interface PaypalTransaction {
   paypalTransactionId?: string;
   createdAt: number;
   updatedAt: number;
+  metadata?: Record<string, any>;
 }
 
 /**
@@ -26,7 +27,7 @@ export class PaypalPoller {
   private pollTimer?: NodeJS.Timeout;
   private processedTransactions: Set<string>;
 
-  constructor(orderService: OrderService, kvstoreUrl: string = 'http://localhost:3031', pollInterval: number = 1000) {
+  constructor(orderService: OrderService, kvstoreUrl: string = 'http://localhost:3030/kvstore', pollInterval: number = 1000) {
     this.orderService = orderService;
     this.kvstoreUrl = kvstoreUrl;
     this.pollInterval = pollInterval;
@@ -80,6 +81,9 @@ export class PaypalPoller {
 
     try {
       await this.checkProgressOrders();
+      
+      // Also monitor order status for completed transactions
+      await this.monitorOrderStatus();
     } catch (error) {
       logger.error({ error }, 'Error during PayPal polling');
     }
@@ -107,17 +111,28 @@ export class PaypalPoller {
 
       const transactions = await response.json() as PaypalTransaction[];
       
-      if (transactions.length === 0) {
+      if (!transactions || transactions.length === 0) {
         // No progress orders found, continue polling
         return;
       }
 
+      // Filter out null or invalid transactions
+      const validTransactions = transactions.filter(transaction => 
+        transaction && transaction.txnId && transaction.status === 'progress'
+      );
+
+      if (validTransactions.length === 0) {
+        logger.info('No valid progress transactions found');
+        return;
+      }
+
       logger.info({ 
-        count: transactions.length 
+        total: transactions.length,
+        valid: validTransactions.length
       }, 'Found PayPal progress orders');
 
-      // Process each progress transaction
-      for (const transaction of transactions) {
+      // Process each valid progress transaction
+      for (const transaction of validTransactions) {
         await this.processProgressTransaction(transaction);
       }
 
@@ -131,6 +146,12 @@ export class PaypalPoller {
    */
   private async processProgressTransaction(transaction: PaypalTransaction): Promise<void> {
     try {
+      // Skip if transaction is null or invalid
+      if (!transaction || !transaction.txnId) {
+        logger.warn('Skipping null or invalid transaction');
+        return;
+      }
+
       // Skip if we've already processed this transaction
       if (this.processedTransactions.has(transaction.txnId)) {
         return;
@@ -185,6 +206,12 @@ export class PaypalPoller {
 
       // Update the PayPal transaction status to completed in kvstore
       await this.updatePaypalTransactionStatus(transaction.txnId, 'completed');
+
+      logger.info({ 
+        txnId: transaction.txnId,
+        orderId: orderTrigger.id,
+        orderStatus: orderTrigger.status
+      }, 'Updated PayPal transaction with order details');
 
     } catch (error) {
       logger.error({ 
@@ -254,5 +281,83 @@ export class PaypalPoller {
   clearProcessedTransactions(): void {
     this.processedTransactions.clear();
     logger.info('Cleared processed transactions cache');
+  }
+
+  /**
+   * Monitor completed orders and update PayPal transaction metadata
+   */
+  async monitorOrderStatus(): Promise<void> {
+    try {
+      // Get all completed PayPal transactions that have main agent order IDs
+      const response = await fetch(`${this.kvstoreUrl}/paypal/transactions?status=completed`);
+      
+      if (!response.ok) {
+        logger.error({ 
+          status: response.status, 
+          statusText: response.statusText 
+        }, 'Failed to fetch completed PayPal transactions for monitoring');
+        return;
+      }
+
+      const transactions = await response.json() as PaypalTransaction[];
+      
+      if (!transactions || transactions.length === 0) {
+        return;
+      }
+
+      // Filter out null or invalid transactions
+      const validTransactions = transactions.filter(transaction => 
+        transaction && transaction.txnId && transaction.metadata?.mainAgentOrderId
+      );
+
+      for (const transaction of validTransactions) {
+        await this.updateOrderStatusInTransaction(transaction);
+      }
+
+    } catch (error) {
+      logger.error({ error }, 'Failed to monitor order status');
+    }
+  }
+
+  /**
+   * Update order status in PayPal transaction metadata
+   */
+  private async updateOrderStatusInTransaction(transaction: PaypalTransaction): Promise<void> {
+    try {
+      // Skip if transaction is null or invalid
+      if (!transaction || !transaction.txnId) {
+        logger.warn('Skipping null or invalid transaction in order status update');
+        return;
+      }
+
+      const orderId = transaction.metadata?.mainAgentOrderId;
+      if (!orderId) {
+        return;
+      }
+
+      // Get current order status from main agent service
+      const orderStatus = this.orderService.getOrderStatus(orderId);
+      
+      if (orderStatus && orderStatus.status !== transaction.metadata?.orderStatus) {
+        // Order status has changed, update the PayPal transaction
+        await this.updatePaypalTransactionMetadata(transaction.txnId, {
+          orderStatus: orderStatus.status,
+          lastOrderStatusUpdate: new Date().toISOString()
+        });
+
+        logger.info({ 
+          txnId: transaction.txnId,
+          orderId,
+          oldStatus: transaction.metadata?.orderStatus,
+          newStatus: orderStatus.status
+        }, 'Updated order status in PayPal transaction metadata');
+      }
+
+    } catch (error) {
+      logger.error({ 
+        error, 
+        txnId: transaction.txnId 
+      }, 'Failed to update order status in PayPal transaction');
+    }
   }
 }

@@ -22,14 +22,8 @@ export class OrderService {
   private transformTriggerRequest(triggerRequest: TriggerRequest): OrderRequest {
     return {
       target_pyusd: triggerRequest.target_pyusd,
-      constraints: {
-        max_latency_ms: 20000,
-        max_fee_pct: 0.03
-      },
       payment_context: {
-        chain: "polygon",
-        payer: "0x1234567890abcdef1234567890abcdef12345678",
-        tx_hash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12"
+        chain: "polygon"
       }
     };
   }
