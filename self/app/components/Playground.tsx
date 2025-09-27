@@ -7,6 +7,7 @@ import { SelfAppBuilder, getUniversalLink } from '@selfxyz/common';
 import Image from 'next/image';
 import type { SelfApp } from '@selfxyz/common';
 import OrderBook from './OrderBook';
+import { ThemeToggle } from './ThemeToggle';
 
 // Import the QR code component with SSR disabled to prevent document references during server rendering
 const SelfQRcodeWrapper = dynamic(
@@ -155,18 +156,23 @@ function Playground() {
     if (!userId) return null;
 
     const renderWelcomeState = () => (
-        <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
+        <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 overflow-hidden transition-colors duration-500">
+            {/* Theme Toggle */}
+            <div className="absolute top-6 left-6 z-30">
+                <ThemeToggle />
+            </div>
+            
             {/* Enhanced Animated Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_50%)]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.15),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.25),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.15),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.25),transparent_50%)]"></div>
             
             {/* Floating Elements */}
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-            <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-2xl animate-pulse"></div>
+            <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 dark:from-blue-400/30 dark:to-indigo-400/30 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 dark:from-purple-400/30 dark:to-pink-400/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 dark:from-indigo-400/40 dark:to-purple-400/40 rounded-full blur-2xl animate-pulse"></div>
             
             {/* Grid Pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(99,102,241,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.08)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
             
             <div className="relative z-10 flex flex-col min-h-screen">
                 <div className="flex-1 flex items-center justify-center px-4 py-8">
@@ -185,15 +191,15 @@ function Playground() {
                             
                             {/* Hero Text */}
                             <div className="space-y-6">
-                                <h1 className="text-6xl md:text-7xl font-extrabold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent animate-slideUp leading-tight">
+                                <h1 className="text-6xl md:text-7xl font-extrabold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent animate-slideUp leading-tight">
                                     Pyrex Trading
                                 </h1>
                                 <div className="space-y-4 animate-slideUp" style={{ animationDelay: '0.2s' }}>
-                                    <p className="text-2xl md:text-3xl font-medium text-slate-700 leading-relaxed">
+                                    <p className="text-2xl md:text-3xl font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
                                         Secure • Verified • Decentralized
                                     </p>
-                                    <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                                        Access the next generation trading platform powered by <span className="font-bold text-indigo-600">Self</span> cryptographic verification
+                                    <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
+                                        Access the next generation trading platform powered by <span className="font-bold text-indigo-600 dark:text-indigo-400">Self</span> cryptographic verification
                                     </p>
                                 </div>
                             </div>
@@ -201,42 +207,42 @@ function Playground() {
                         
                         {/* Enhanced Security Features Grid */}
                         <div className="grid md:grid-cols-3 gap-8 animate-slideUp" style={{ animationDelay: '0.4s' }}>
-                            <div className="group relative bg-white/70 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/50 hover:bg-white/80 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="group relative bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/50 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-700/90 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 dark:from-blue-400/10 dark:to-indigo-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 <div className="relative">
                                     <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300">
                                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-3">Bank-Grade Security</h3>
-                                    <p className="text-slate-600 leading-relaxed">Military-grade encryption and multi-layer security protocols protect every transaction</p>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3">Bank-Grade Security</h3>
+                                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">Military-grade encryption and multi-layer security protocols protect every transaction</p>
                                 </div>
                             </div>
                             
-                            <div className="group relative bg-white/70 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/50 hover:bg-white/80 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="group relative bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/50 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-700/90 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 dark:from-indigo-400/10 dark:to-purple-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 <div className="relative">
                                     <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300">
                                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-3">Identity Verified</h3>
-                                    <p className="text-slate-600 leading-relaxed">Cryptographic identity verification ensures you know exactly who you&apos;re trading with</p>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3">Identity Verified</h3>
+                                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">Cryptographic identity verification ensures you know exactly who you&apos;re trading with</p>
                                 </div>
                             </div>
                             
-                            <div className="group relative bg-white/70 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/50 hover:bg-white/80 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="group relative bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/50 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-700/90 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 dark:from-purple-400/10 dark:to-pink-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 <div className="relative">
                                     <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300">
                                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-3">Lightning Fast</h3>
-                                    <p className="text-slate-600 leading-relaxed">Instant trade execution and settlement with real-time order matching</p>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3">Lightning Fast</h3>
+                                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">Instant trade execution and settlement with real-time order matching</p>
                                 </div>
                             </div>
                         </div>
@@ -265,24 +271,24 @@ function Playground() {
                                 </span>
                             </button>
                             
-                            <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                                 Start your journey to secure, verified trading. Your identity remains private while proving authenticity.
                             </p>
                         </div>
                         
                         {/* Enhanced Trust Indicators */}
                         <div className="flex flex-wrap justify-center items-center gap-8 animate-fadeIn" style={{ animationDelay: '0.8s' }}>
-                            <div className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                            <div className="flex items-center space-x-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30 dark:border-slate-700/30">
                                 <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg"></div>
-                                <span className="text-sm font-medium text-slate-700">256-bit SSL Encryption</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">256-bit SSL Encryption</span>
                             </div>
-                            <div className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                            <div className="flex items-center space-x-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30 dark:border-slate-700/30">
                                 <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full animate-pulse shadow-lg"></div>
-                                <span className="text-sm font-medium text-slate-700">Decentralized Identity</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Decentralized Identity</span>
                             </div>
-                            <div className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                            <div className="flex items-center space-x-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30 dark:border-slate-700/30">
                                 <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full animate-pulse shadow-lg"></div>
-                                <span className="text-sm font-medium text-slate-700">Zero-Knowledge Proofs</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Zero-Knowledge Proofs</span>
                             </div>
                         </div>
                     </div>
@@ -292,17 +298,22 @@ function Playground() {
     );
 
     const renderQRState = () => (
-        <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 overflow-hidden">
+        <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 dark:from-slate-900 dark:via-indigo-900 dark:to-purple-900 overflow-hidden transition-colors duration-500">
+            {/* Theme Toggle */}
+            <div className="absolute top-6 left-6 z-30">
+                <ThemeToggle />
+            </div>
+            
             {/* Enhanced Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%)]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.15),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.25),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.15),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.25),transparent_50%)]"></div>
             
             {/* Floating Elements */}
-            <div className="absolute -top-32 -left-32 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
+            <div className="absolute -top-32 -left-32 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 dark:from-indigo-400/30 dark:to-purple-400/30 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-br from-purple-400/20 to-pink-400/20 dark:from-purple-400/30 dark:to-pink-400/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
             
             {/* Grid Pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(99,102,241,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.08)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
             
             {/* Enhanced QR Code in top-right corner */}
             <div className="absolute top-6 right-6 z-20 animate-qr-slide">
@@ -311,14 +322,14 @@ function Playground() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
                     
                     {/* QR Container */}
-                    <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/50">
+                    <div className="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/50 dark:border-slate-700/50">
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center space-x-3 mb-3">
                                 <div className="relative">
                                     <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse shadow-lg"></div>
                                     <div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
                                 </div>
-                                <span className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
+                                <span className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-200 dark:to-slate-100 bg-clip-text text-transparent">
                                     Self Verification
                                 </span>
                             </div>
@@ -327,7 +338,7 @@ function Playground() {
                         
                         {selfApp ? (
                             <div className="relative">
-                                <div className="qr-container bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 shadow-inner border border-slate-100">
+                                <div className="qr-container bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 shadow-inner border border-slate-100 dark:border-slate-300">
                                     <SelfQRcodeWrapper
                                         selfApp={selfApp}
                                         onSuccess={handleSuccess}
@@ -345,22 +356,22 @@ function Playground() {
                                 <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-3 border-b-3 border-pink-500 rounded-br-xl shadow-lg"></div>
                             </div>
                         ) : (
-                            <div className="w-56 h-56 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center animate-pulse border border-slate-200">
+                            <div className="w-56 h-56 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center animate-pulse border border-slate-200 dark:border-slate-600">
                                 <div className="text-center space-y-4">
                                     <div className="relative mx-auto w-12 h-12">
                                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-spin opacity-20"></div>
-                                        <svg className="relative w-12 h-12 text-slate-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="relative w-12 h-12 text-slate-400 dark:text-slate-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
                                     </div>
-                                    <p className="text-sm font-medium text-slate-500">Generating secure QR code...</p>
+                                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Generating secure QR code...</p>
                                 </div>
                             </div>
                         )}
                         
                         <div className="mt-6 space-y-4">
-                            <div className="bg-slate-50/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-slate-200/50">
-                                <p className="text-xs font-medium text-slate-600 text-center">
+                            <div className="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-slate-200/50 dark:border-slate-600/50">
+                                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">
                                     Session ID: {userId!.substring(0, 8)}...
                                 </p>
                             </div>
@@ -407,51 +418,51 @@ function Playground() {
                     
                     {/* Enhanced Title Section */}
                     <div className="space-y-6">
-                        <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 bg-clip-text text-transparent">
+                        <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 dark:from-slate-100 dark:via-indigo-100 dark:to-purple-100 bg-clip-text text-transparent">
                             Scan QR Code
                         </h2>
-                        <p className="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-xl mx-auto">
-                            Open the <span className="font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Self app</span> and scan the QR code in the top-right corner to verify your identity
+                        <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl mx-auto">
+                            Open the <span className="font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">Self app</span> and scan the QR code in the top-right corner to verify your identity
                         </p>
                     </div>
                     
                     {/* Enhanced Instructions Card */}
-                    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/50 max-w-md mx-auto">
+                    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/50 dark:border-slate-700/50 max-w-md mx-auto">
                         <div className="flex items-center justify-center space-x-2 mb-6">
                             <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900">Verification Steps</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Verification Steps</h3>
                         </div>
                         
                         <div className="space-y-5">
                             <div className="flex items-start space-x-4 group">
                                 <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">1</div>
                                 <div className="flex-1 pt-1">
-                                    <span className="text-slate-700 font-medium">Open your Self mobile app</span>
+                                    <span className="text-slate-700 dark:text-slate-300 font-medium">Open your Self mobile app</span>
                                 </div>
                             </div>
                             <div className="flex items-start space-x-4 group">
                                 <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">2</div>
                                 <div className="flex-1 pt-1">
-                                    <span className="text-slate-700 font-medium">Tap the scan button</span>
+                                    <span className="text-slate-700 dark:text-slate-300 font-medium">Tap the scan button</span>
                                 </div>
                             </div>
                             <div className="flex items-start space-x-4 group">
                                 <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">3</div>
                                 <div className="flex-1 pt-1">
-                                    <span className="text-slate-700 font-medium">Point camera at QR code above</span>
+                                    <span className="text-slate-700 dark:text-slate-300 font-medium">Point camera at QR code above</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     {/* Security Notice */}
-                    <div className="flex items-center justify-center space-x-3 bg-white/50 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30 max-w-fit mx-auto">
+                    <div className="flex items-center justify-center space-x-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30 dark:border-slate-700/30 max-w-fit mx-auto">
                         <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse shadow-lg"></div>
-                        <span className="text-sm font-medium text-slate-700">Secure end-to-end encrypted verification</span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Secure end-to-end encrypted verification</span>
                     </div>
                 </div>
             </div>
@@ -459,18 +470,23 @@ function Playground() {
     );
 
     const renderVerifiedState = () => (
-        <div className="relative min-h-screen bg-gradient-to-br from-emerald-50 via-slate-50 to-indigo-100 overflow-hidden">
+        <div className="relative min-h-screen bg-gradient-to-br from-emerald-50 via-slate-50 to-indigo-100 dark:from-emerald-900/20 dark:via-slate-900 dark:to-indigo-900/20 overflow-hidden transition-colors duration-500">
+            {/* Theme Toggle */}
+            <div className="absolute top-6 left-6 z-30">
+                <ThemeToggle />
+            </div>
+            
             {/* Enhanced Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.15),transparent_50%)]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.15),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.15),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.25),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.15),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.25),transparent_50%)]"></div>
             
             {/* Floating Elements */}
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-green-400/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-gradient-to-br from-green-400/30 to-indigo-400/30 rounded-full blur-2xl animate-pulse"></div>
+            <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-green-400/20 dark:from-emerald-400/30 dark:to-green-400/30 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 dark:from-indigo-400/30 dark:to-purple-400/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-gradient-to-br from-green-400/30 to-indigo-400/30 dark:from-green-400/40 dark:to-indigo-400/40 rounded-full blur-2xl animate-pulse"></div>
             
             {/* Grid Pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(16,185,129,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.08)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
             
             <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8">
                 {/* Enhanced Success Header */}
@@ -489,49 +505,49 @@ function Playground() {
                     </div>
                     
                     <div className="space-y-6">
-                        <h2 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-emerald-600 via-green-600 to-indigo-700 bg-clip-text text-transparent animate-slideUp leading-tight">
+                        <h2 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-emerald-600 via-green-600 to-indigo-700 dark:from-emerald-400 dark:via-green-400 dark:to-indigo-400 bg-clip-text text-transparent animate-slideUp leading-tight">
                             🎉 Verification Complete!
                         </h2>
-                        <p className="text-2xl md:text-3xl font-medium text-slate-700 max-w-2xl mx-auto animate-slideUp leading-relaxed" style={{ animationDelay: '0.2s' }}>
+                        <p className="text-2xl md:text-3xl font-medium text-slate-700 dark:text-slate-300 max-w-2xl mx-auto animate-slideUp leading-relaxed" style={{ animationDelay: '0.2s' }}>
                             Welcome to the secure trading environment. Your identity has been cryptographically verified.
                         </p>
                     </div>
                     
                     {/* Enhanced Success Features */}
                     <div className="flex flex-wrap justify-center gap-6 animate-slideUp" style={{ animationDelay: '0.4s' }}>
-                        <div className="group relative bg-white/80 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-xl border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-105">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="group relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-xl border border-white/50 dark:border-slate-700/50 hover:bg-white/90 dark:hover:bg-slate-700/90 transition-all duration-300 hover:scale-105">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 dark:from-emerald-400/10 dark:to-green-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                 </div>
-                                <span className="font-bold text-slate-900">Identity Verified</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100">Identity Verified</span>
                             </div>
                         </div>
                         
-                        <div className="group relative bg-white/80 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-xl border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-105">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="group relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-xl border border-white/50 dark:border-slate-700/50 hover:bg-white/90 dark:hover:bg-slate-700/90 transition-all duration-300 hover:scale-105">
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 dark:from-indigo-400/10 dark:to-purple-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                 </div>
-                                <span className="font-bold text-slate-900">Secure Session</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100">Secure Session</span>
                             </div>
                         </div>
                         
-                        <div className="group relative bg-white/80 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-xl border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-105">
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="group relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-xl border border-white/50 dark:border-slate-700/50 hover:bg-white/90 dark:hover:bg-slate-700/90 transition-all duration-300 hover:scale-105">
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 dark:from-purple-400/10 dark:to-pink-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 </div>
-                                <span className="font-bold text-slate-900">Ready to Trade</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100">Ready to Trade</span>
                             </div>
                         </div>
                     </div>
@@ -539,25 +555,188 @@ function Playground() {
                 
                 {/* Enhanced Order Book Section */}
                 <div className="w-full max-w-7xl animate-scaleIn" style={{ animationDelay: '0.6s' }}>
-                    {/* Order Book Header */}
-                    <div className="text-center mb-10">
-                        <div className="space-y-4">
-                            <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 bg-clip-text text-transparent">
-                                PYUSD/INR Order Book
-                            </h3>
-                            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                                Real-time trading opportunities from verified sellers in our secure marketplace
-                            </p>
+                    {/* Agent Deployment & Amount Setting Sections */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        {/* Agent Deployment Section */}
+                        <div className="relative group h-full">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+                            <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 dark:border-slate-700/50 p-8 h-full flex flex-col">
+                                {/* Header */}
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 9.172V5L8 4z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Deploy Trading Agent</h3>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">Launch your automated trading agent</p>
+                                    </div>
+                                </div>
+
+                                {/* Agent Status */}
+                                <div className="mb-2.5">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 border border-slate-200/60 dark:border-slate-600/60">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse"></div>
+                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Agent Status</span>
+                                        </div>
+                                        <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-full">
+                                            Ready to Deploy
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Agent Configuration */}
+                                <div className="space-y-4 mb-3">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200/60 dark:border-blue-700/60">
+                                            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Strategy</div>
+                                            <div className="text-sm font-bold text-slate-800 dark:text-slate-200">Market Making</div>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4 border border-purple-200/60 dark:border-purple-700/60">
+                                            <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-1">Network</div>
+                                            <div className="text-sm font-bold text-slate-800 dark:text-slate-200">Polygon</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Agent Description */}
+                                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-200/60 dark:border-indigo-700/60">
+                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Agent Capabilities</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                            <span>Automated liquidity provision</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                                            <span>Real-time price optimization</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                                            <span>Risk management protocols</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Deploy Button */}
+                                <div className="mt-auto">
+                                    <button className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 group">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                            </svg>
+                                            <span>Deploy Agent</span>
+                                            <div className="w-2 h-2 bg-white/30 rounded-full animate-pulse"></div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center justify-center mt-6">
-                            <div className="w-32 h-1 bg-gradient-to-r from-emerald-500 via-indigo-500 to-purple-500 rounded-full shadow-lg"></div>
+
+                        {/* Amount Setting Section */}
+                        <div className="relative group h-full">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+                            <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 dark:border-slate-700/50 p-8 h-full flex flex-col">
+                                {/* Header */}
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Set Deployment Amount</h3>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">Configure your trading capital</p>
+                                    </div>
+                                </div>
+
+                                {/* Amount Input */}
+                                <div className="mb-6">
+                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                                        Deployment Amount
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <span className="text-slate-500 dark:text-slate-400 font-bold">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            placeholder="1000.00"
+                                            className="w-full pl-8 pr-20 py-4 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        />
+                                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-md">
+                                                PYUSD
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Amount Presets */}
+                                <div className="mb-6">
+                                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Quick Amounts</div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {['100', '500', '1K', '5K'].map((amount) => (
+                                            <button
+                                                key={amount}
+                                                className="py-2 px-3 text-xs font-bold bg-slate-100 hover:bg-emerald-100 dark:bg-slate-700 dark:hover:bg-emerald-900/30 text-slate-700 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 rounded-lg transition-all duration-200 hover:scale-105"
+                                            >
+                                                ${amount}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Balance Info */}
+                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-emerald-200/60 dark:border-emerald-700/60 mb-6">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Available Balance</span>
+                                        <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">$2,450.00 PYUSD</span>
+                                    </div>
+                                </div>
+
+                                {/* Confirm Button */}
+                                <div className="mt-auto">
+                                    <button className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:via-teal-700 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 group">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>Confirm Amount</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                    
+                    {/* Order Book Header Section */}
+                    <div className="text-center mb-8 animate-fadeIn" style={{ animationDelay: '0.6s' }}>
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
+                                    PYUSD/INR Order Book
+                                </h2>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            <span>Live Market Data • Real-time Order Matching</span>
+                        </div>
+                        <div className="w-16 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 mx-auto mt-4 rounded-full shadow-lg"></div>
                     </div>
                     
                     {/* Enhanced Order Book Container */}
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-indigo-500 to-purple-500 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
-                        <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
+                        <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700/50 overflow-hidden">
                             <OrderBook />
                         </div>
                     </div>
@@ -565,15 +744,15 @@ function Playground() {
                 
                 {/* Enhanced Footer */}
                 <div className="mt-16 text-center space-y-6 animate-fadeIn" style={{ animationDelay: '1s' }}>
-                    <div className="flex items-center justify-center space-x-4 bg-white/50 backdrop-blur-sm rounded-full px-8 py-4 border border-white/30 max-w-fit mx-auto">
+                    <div className="flex items-center justify-center space-x-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-full px-8 py-4 border border-white/30 dark:border-slate-700/30 max-w-fit mx-auto">
                         <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse shadow-lg"></div>
-                        <span className="text-lg font-medium text-slate-700">
+                        <span className="text-lg font-medium text-slate-700 dark:text-slate-300">
                             All transactions secured by Self&apos;s cryptographic verification
                         </span>
                         <div className="w-4 h-4 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full animate-pulse shadow-lg"></div>
                     </div>
                     
-                    <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                         Your privacy is protected while maintaining full transaction transparency and authenticity
                     </p>
                 </div>
