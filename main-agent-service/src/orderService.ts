@@ -108,6 +108,53 @@ export class OrderService {
               'Payment completed successfully for offer'
             );
 
+
+          // Make POST call to /reservations/:id/commit on https://pyrex-ethglobal25.onrender.com
+          try {
+            const commitUrl = `https://pyrex-ethglobal25.onrender.com/reservations/${matchedOffer.reservation_id}/commit`;
+            const commitResponse = await fetch(commitUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            if (!commitResponse.ok) {
+              const errorText = await commitResponse.text();
+              logger.error(
+                {
+                  orderId,
+                  offerId: matchedOffer.offer_id,
+                  reservationId: matchedOffer.reservation_id,
+                  status: commitResponse.status,
+                  statusText: commitResponse.statusText,
+                  errorText
+                },
+                'Failed to commit reservation for matched offer'
+              );
+              throw new Error(`Failed to commit reservation: ${commitResponse.status} ${commitResponse.statusText} - ${errorText}`);
+            } else {
+              logger.info(
+                {
+                  orderId,
+                  offerId: matchedOffer.offer_id,
+                  reservationId: matchedOffer.reservation_id
+                },
+                'Successfully committed reservation for matched offer'
+              );
+            }
+          } catch (commitError) {
+            logger.error(
+              {
+                orderId,
+                offerId: matchedOffer.offer_id,
+                reservationId: matchedOffer.reservation_id,
+                error: (commitError as Error).message
+              },
+              'Error during reservation commit for matched offer'
+            );
+            throw commitError;
+          }
+
           } catch (error) {
             logger.error(
               { 
