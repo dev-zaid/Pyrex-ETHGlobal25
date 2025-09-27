@@ -26,8 +26,10 @@ app.post('/fulfill-order', async (req, res) => {
       razorpay: result.razorpay,
     });
   } catch (error) {
-    logger.error({ error }, 'Reservation validation failed');
-    return res.status(400).json({ error: (error as Error).message });
+    const message = (error as Error).message;
+    logger.error({ error }, 'Order fulfillment failed');
+    const status = message === 'Razorpay transaction failed' ? 502 : 400;
+    return res.status(status).json({ error: message });
   }
 });
 

@@ -44,12 +44,18 @@ export async function fulfillOrder(request: FulfillmentRequest): Promise<Fulfill
   const { reservationId } = await validateReservation(request);
 
   const amountInPaise = Math.round(request.amount * 100);
-  const razorpayResponse = await createUpiPayment({
-    amount: amountInPaise,
-    currency: 'INR',
-    upi: { vpa: 'success@upi' },
-    reference_id: reservationId,
-  });
+  let razorpayResponse;
+  try {
+    razorpayResponse = await createUpiPayment({
+      amount: amountInPaise,
+      currency: 'INR',
+      upi: { vpa: 'success@upi' },
+      reference_id: reservationId,
+    });
+  } catch (error) {
+    logger.error({ error }, 'Razorpay payment failed');
+    throw new Error('Razorpay transaction failed');
+  }
 
   return {
     reservationId,
