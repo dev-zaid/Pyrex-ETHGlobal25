@@ -68,6 +68,32 @@ Responses:
 - `200 OK` returns a `RouteResponse` with the matched offers, totals, and downstream execution placeholders.
 - `400 Bad Request` carries `{ "error": "message" }` when validation, liquidity, or reservation steps fail.
 
+## Routing algorithm explained
+
+### 1. Ranking offers
+- All `active` offers are transformed into buyer-centric metrics: INR per PYUSD (`1 / rate_pyusd_per_inr`), net fee share (`1 - fee_pct`), and latency (capped at 60 s).
+- Each metric is min–max normalised so the best value in the set scores near 1 while the worst scores near 0. Latency is inverted so lower milliseconds become higher desirability.
+- The combined score is `w_rate * rate_score + w_fee * fee_score + w_latency * latency_score`.
+- Hard priorities run first: offers quoting `token=PYUSD` outrank others, and Polygon offers outrank other chains. Only when two offers tie on token/chain does the weighted score decide ordering.
+
+#### Router weights
+- Configure via `ROUTER_WEIGHTS` (default `w_rate=0.6,w_fee=0.2,w_latency=0.2`). Missing keys fall back to defaults; extreme values make the router ignore other factors.
+- Example: with three offers A/B/C (PYUSD/Polygon) the default weights produce these scores:
+  - A: rate 0.011, fee 0.10 %, latency 8 s → score ≈ 0.74.
+  - B: rate 0.0108, fee 0.20 %, latency 12 s → score ≈ 0.60.
+  - C: rate 0.012, fee 0.05 %, latency 5 s → score ≈ 0.40.
+  Offer A wins even though C has the lowest fee, because A balances rate and latency best under current weights.
+
+### 2. Greedy allocation
+- Walk the ranked list once, filling the request with `min(remaining, available_pyusd, max_pyusd)` from each offer.
+- Respect `min_pyusd`: if the slice drops below the seller’s minimum, skip unless it is the final piece and the agent is allowed to take the remainder.
+- Expected INR per slice is computed as `take * inr_per_pyusd * (1 - fee_pct)` and added to the running totals.
+- Example: target 150 PYUSD, top offers have (available, max, min) of (120, 120, 50), (200, 80, 40), (300, 200, 100). Allocation takes 120 from offer 1, then 30 from offer 2 (allowed because the remainder equals the remaining demand), hitting the target with two reservations.
+
+### 3. Reservation & rollback
+- After allocation, the agent reserves each slice sequentially via `/offers/:id/reserve`. Failures trigger a rollback loop that releases any previously obtained reservation IDs, keeping the orderbook consistent.
+- Successful runs return the reservation IDs so downstream settlement services can commit or release them later.
+
 ### Sample response explained
 
 ```json
