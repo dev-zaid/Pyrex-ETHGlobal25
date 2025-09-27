@@ -22,10 +22,9 @@ Copy `.env.example` to `.env` and set values:
 PORT=5000
 ORDERBOOK_SERVICE_URL=http://localhost:3000
 CASHFREE_BASE_URL=https://payout-gamma.cashfree.com
-CASHFREE_AUTH_TOKEN=token
 MAX_CONCURRENT_FULFILLMENTS=4
 ```
-UPI VPA is fixed to `success@upi` for the hackathon.
+UPI VPA is fixed to `success@upi` for the hackathon. The agent fetches a short-lived Cashfree bearer token automatically from the Dev Studio endpoint; override `CASHFREE_TOKEN_URL` only when targeting a different environment.
 
 ## API
 ```

@@ -13,6 +13,13 @@ export class CashfreeApiError extends Error {
   }
 }
 
+export class CashfreeAuthError extends Error {
+  constructor(message: string, public readonly details: CashfreeErrorDetails = {}) {
+    super(message);
+    this.name = 'CashfreeAuthError';
+  }
+}
+
 export class CashfreeFulfillmentError extends Error {
   constructor(
     message: string,

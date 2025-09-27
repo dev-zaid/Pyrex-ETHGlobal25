@@ -1,7 +1,11 @@
 import { fetchReservation } from "../clients/orderbook";
 import { logger } from "../utils/logger";
 import { createDirectTransfer } from "../clients/cashfree";
-import { CashfreeApiError, CashfreeFulfillmentError } from "../errors";
+import {
+  CashfreeApiError,
+  CashfreeAuthError,
+  CashfreeFulfillmentError,
+} from "../errors";
 
 const AMOUNT_TOLERANCE = 1e-8;
 
@@ -21,6 +25,8 @@ export interface FulfillmentResult {
   cashfree: {
     reference_id: string;
     status: string;
+    utr?: string;
+    acknowledged?: boolean;
   };
 }
 
@@ -76,7 +82,10 @@ export async function fulfillOrder(
       },
     });
   } catch (error) {
-    if (error instanceof CashfreeApiError) {
+    if (
+      error instanceof CashfreeApiError ||
+      error instanceof CashfreeAuthError
+    ) {
       logger.error(
         { orderId: request.orderId, details: error.details },
         "Cashfree transfer failed"
@@ -93,12 +102,21 @@ export async function fulfillOrder(
     throw new CashfreeFulfillmentError("Cashfree transaction failed");
   }
 
+  const cashfree = {
+    reference_id: transferResponse.referenceId,
+    status: transferResponse.status,
+  } as FulfillmentResult["cashfree"];
+
+  if (transferResponse.utr) {
+    cashfree.utr = transferResponse.utr;
+  }
+  if (transferResponse.acknowledged !== undefined) {
+    cashfree.acknowledged = transferResponse.acknowledged;
+  }
+
   return {
     reservationId,
     amount: amountToFulfill,
-    cashfree: {
-      reference_id: transferResponse.referenceId,
-      status: transferResponse.status,
-    },
+    cashfree,
   };
 }
