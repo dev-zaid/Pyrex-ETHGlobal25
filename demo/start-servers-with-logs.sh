@@ -28,7 +28,6 @@ fi
 FACILITATOR_PORT=${FACILITATOR_PORT:-5401}
 SERVICE_AGENT_PORT=${SERVICE_AGENT_PORT:-5402}
 RESOURCE_SERVER_PORT=${RESOURCE_SERVER_PORT:-5403}
-FRONTEND_PORT=${FRONTEND_PORT:-3000}
 
 echo -e "${BLUE}🚀 Starting Pyrex A2A x402 Demo Servers${NC}"
 echo -e "${BLUE}==========================================${NC}"
@@ -66,7 +65,7 @@ done
 
 # Kill any existing processes on demo ports
 echo -e "${YELLOW}🧹 Cleaning up existing processes...${NC}"
-for port in "$FACILITATOR_PORT" "$SERVICE_AGENT_PORT" "$RESOURCE_SERVER_PORT" "$FRONTEND_PORT"; do
+for port in "$FACILITATOR_PORT" "$SERVICE_AGENT_PORT" "$RESOURCE_SERVER_PORT"; do
   pids=$(lsof -n -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true)
   if [ -n "$pids" ]; then
     echo -e "${YELLOW}  Killing processes on port $port: $pids${NC}"
@@ -100,14 +99,6 @@ env PORT="$SERVICE_AGENT_PORT" \
     node "$ROOT_DIR/a2a/service-agent/dist/index.js" &
 SERVICE_PID=$!
 
-# Start Frontend (optional)
-if [ "${START_FRONTEND:-true}" = "true" ]; then
-  echo -e "${GREEN}🔧 Starting Frontend on port $FRONTEND_PORT...${NC}"
-  cd "$ROOT_DIR/a2a/frontend"
-  npm run dev &
-  FRONTEND_PID=$!
-  cd "$ROOT_DIR"
-fi
 
 # Wait for services to become healthy
 echo -e "${CYAN}⏳ Waiting for services to become healthy...${NC}"
@@ -138,19 +129,12 @@ check_health "http://localhost:$FACILITATOR_PORT/healthz" "Facilitator"
 check_health "http://localhost:$RESOURCE_SERVER_PORT/healthz" "Resource Server"
 check_health "http://localhost:$SERVICE_AGENT_PORT/healthz" "Service Agent"
 
-if [ "${START_FRONTEND:-true}" = "true" ]; then
-  check_health "http://localhost:$FRONTEND_PORT" "Frontend"
-fi
-
 echo -e "${GREEN}🎉 All services are running!${NC}"
 echo -e "${BLUE}==========================================${NC}"
 echo -e "${CYAN}📊 Service URLs:${NC}"
 echo -e "  ${PURPLE}Facilitator:${NC}     http://localhost:$FACILITATOR_PORT"
 echo -e "  ${PURPLE}Service Agent:${NC}   http://localhost:$SERVICE_AGENT_PORT"
 echo -e "  ${PURPLE}Resource Server:${NC} http://localhost:$RESOURCE_SERVER_PORT"
-if [ "${START_FRONTEND:-true}" = "true" ]; then
-  echo -e "  ${PURPLE}Frontend:${NC}        http://localhost:$FRONTEND_PORT"
-fi
 echo -e "${BLUE}==========================================${NC}"
 echo -e "${CYAN}🧪 Test the flow with:${NC}"
 echo -e "curl -X POST http://localhost:$SERVICE_AGENT_PORT/a2a \\"
@@ -159,19 +143,35 @@ echo -e "  -d '{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"message/send\", \
 echo -e "${BLUE}==========================================${NC}"
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
 
-# Function to show logs with colors
+# Function to show logs with colors (only new lines)
 show_logs() {
+  local fac_last_line=""
+  local res_last_line=""
+  local service_last_line=""
+  
   while true; do
     if [ -f "/tmp/fac.log" ]; then
-      echo -e "${PURPLE}[FACILITATOR]${NC} $(tail -n 1 /tmp/fac.log 2>/dev/null || echo '')"
+      local current_line=$(tail -n 1 /tmp/fac.log 2>/dev/null || echo "")
+      if [ "$current_line" != "$fac_last_line" ] && [ -n "$current_line" ]; then
+        echo -e "${PURPLE}[FACILITATOR]${NC} $current_line"
+        fac_last_line="$current_line"
+      fi
     fi
     if [ -f "/tmp/res.log" ]; then
-      echo -e "${BLUE}[RESOURCE]${NC} $(tail -n 1 /tmp/res.log 2>/dev/null || echo '')"
+      local current_line=$(tail -n 1 /tmp/res.log 2>/dev/null || echo "")
+      if [ "$current_line" != "$res_last_line" ] && [ -n "$current_line" ]; then
+        echo -e "${BLUE}[RESOURCE]${NC} $current_line"
+        res_last_line="$current_line"
+      fi
     fi
     if [ -f "/tmp/service.log" ]; then
-      echo -e "${GREEN}[SERVICE]${NC} $(tail -n 1 /tmp/service.log 2>/dev/null || echo '')"
+      local current_line=$(tail -n 1 /tmp/service.log 2>/dev/null || echo "")
+      if [ "$current_line" != "$service_last_line" ] && [ -n "$current_line" ]; then
+        echo -e "${GREEN}[SERVICE]${NC} $current_line"
+        service_last_line="$current_line"
+      fi
     fi
-    sleep 2
+    sleep 1
   done
 }
 
