@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "axios": "^1.12.2",
+    "ethers": "^6.15.0",
+    "typescript": "^5.9.2"
+  },
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "## Overview This demonstration showcases **Agent-to-Agent (A2A)** cooperation using the **x402 payment protocol**. Two independent agents work together to request and pay for premium HTTP resources, with payments settled on **Polygon Amoy testnet** (chainId 80002) using an EIP-3009 style transferWithAuthorization flow.",
+  "main": "test-modified-flow.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
