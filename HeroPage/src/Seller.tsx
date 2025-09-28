@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  FaWallet,
-  FaHourglassHalf,
-  FaExchangeAlt,
-  FaCheckCircle,
-  FaChartLine,
-} from "react-icons/fa";
+import { FaWallet, FaHourglassHalf, FaChartLine } from "react-icons/fa";
 
 /**
  * A dark-themed, single-page React component describing the Secondary Agent (Seller's) Workflow.
