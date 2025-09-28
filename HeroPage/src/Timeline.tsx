@@ -1,10 +1,32 @@
 import { Timeline } from "./components/ui/timeline";
 import qr from "./assets/QRImage_2.png";
+import verify from "./assets/verify-self.png";
+import success from "./assets/successful-p.png";
+import processing from "./assets/processing.png";
+import pay from "./assets/pay.png";
 
 export function TimelinePage() {
   const data = [
     {
-      title: "The User",
+      title: "Verify",
+      content: (
+        <div>
+          <div className="grid grid-cols-2 gap-4 items-center">
+            <img
+              src={verify}
+              alt="hero template"
+              className="h-48 w-full max-w-full rounded-lg object-contain shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-60 lg:h-100"
+            />
+            <div className="text-white text-xl font-semibold text-center">
+              User authenticates their identity by using their Passport and
+              Aadhaar through Self Protocol.
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Scan",
       content: (
         <div>
           {/* <p className="mb-8 text-xs font-normal text-neutral-800 md:text-sm dark:text-neutral-200">
@@ -16,11 +38,10 @@ export function TimelinePage() {
               alt="Startup Template"
               //   width={700}
               //   height={1000}
-              className="w-full rounded-lg object-cover md:h-96 lg:h-96 bg-transparent"
+              className="w-full rounded-lg object-cover md:h-96 lg:h-100 bg-transparent"
             />
             <div className="text-white text-xl font-semibold text-center">
-              User pays via PayPal (USD) → converted to PYUSD for efficient
-              cross-border payment.
+              User scans the QR code of the merchant.
             </div>
           </div>
         </div>
@@ -47,21 +68,20 @@ export function TimelinePage() {
     //   ),
     // },
     {
-      title: "The Agent",
+      title: "Pay",
       content: (
         <div>
           <div className="grid grid-cols-2 gap-4">
             <img
-              src="https://assets.aceternity.com/cards.png"
+              src={pay}
               alt="cards template"
-              width={500}
-              height={500}
-              className="h-20 w-full rounded-lg object-cover shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-44 lg:h-60"
+              // width={500}
+              // height={500}
+              className="h-48 w-full max-w-full rounded-lg object-contain shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-60 lg:h-100"
             />
             <div className="mb-8 mt-10">
               <div className="text-white text-xl font-semibold text-center">
-                Pyrex agent finds the best exchange route
-                (stablecoin-to-stablecoin or multi-step conversion).
+                User pays the converted USD amount through PayPal.
               </div>
             </div>
           </div>
@@ -69,79 +89,41 @@ export function TimelinePage() {
       ),
     },
     {
-      title: "The Settlement",
+      title: "Process",
       content: (
         <div>
           <div className="grid grid-cols-2 gap-4 items-center">
             <img
-              src="https://assets.aceternity.com/pro/hero-sections.png"
+              src={processing}
               alt="hero template"
-              width={500}
-              height={500}
-              className="h-20 w-full rounded-lg object-cover shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-44 lg:h-60"
+              // width={500}
+              // height={500}
+              className="h-48 w-full max-w-full rounded-lg object-contain shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-60 lg:h-100"
             />
             <div className="text-white text-xl font-semibold text-center">
-              Pyrex agent executes transaction, ensuring vendor receives INR and
-              user’s payment is processed efficiently.
+              USD is converted into PYUSD. This PYUSD is then traded for INR in
+              the orderbook through the Pyrex Agent. The Pyrex Agent initiates
+              the Sellers Agent to transfer the INR to the merchant's UPI.
             </div>
           </div>
         </div>
       ),
     },
     {
-      title: "The Features",
+      title: "Settle",
       content: (
         <div>
           <div className="grid grid-cols-2 gap-4 items-center">
             <img
-              src="https://assets.aceternity.com/pro/hero-sections.png"
+              src={success}
               alt="hero template"
-              width={500}
-              height={500}
-              className="h-20 w-full rounded-lg object-cover shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-44 lg:h-60"
+              // width={500}
+              // height={500}
+              className="h-48 w-full max-w-full rounded-lg object-contain shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-60 lg:h-100"
             />
             <div className="text-white text-xl font-semibold text-center">
-              Supports PYUSD, USDC, USDT for flexible transactions. <br />
-              Transparent, secure, and traceable payments.
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "The Security",
-      content: (
-        <div>
-          <div className="grid grid-cols-2 gap-4 items-center">
-            <img
-              src="https://assets.aceternity.com/pro/hero-sections.png"
-              alt="hero template"
-              width={500}
-              height={500}
-              className="h-20 w-full rounded-lg object-cover shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-44 lg:h-60"
-            />
-            <div className="text-white text-xl font-semibold text-center">
-              Secure user identity and liquidity reservation via SELF Protocol
-              ensures fair trading.
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "The Business",
-      content: (
-        <div>
-          <div className="grid grid-cols-2 gap-4 items-center">
-            <img
-              src="https://assets.aceternity.com/pro/hero-sections.png"
-              alt="hero template"
-              width={500}
-              height={500}
-              className="h-20 w-full rounded-lg object-cover shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] md:h-44 lg:h-60"
-            />
-            <div className="text-white text-xl font-semibold text-center">
-              Transaction fees (0.5%-1%), premium vendor accounts.
+              Upon successful settlement, the Pyrex Agent deposits the PYUSD to
+              the seller's account who had payed the INR.
             </div>
           </div>
         </div>
