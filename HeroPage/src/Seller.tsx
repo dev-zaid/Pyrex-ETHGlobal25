@@ -27,22 +27,16 @@ const Seller = () => {
         "The agent continuously monitors the central orderbook, specifically looking for incoming payment requests for **INR** from a Pyrex Agent.",
     },
     {
-      icon: <FaExchangeAlt className="text-4xl text-sky-400" />,
-      title: "3. Obtain the Fastest and Effecient Route",
+      icon: <FaChartLine className="text-4xl text-fuchsia-400" />,
+      title: "3. Transfer the INR to the Merchant",
       description:
-        "The Pyrex Agent fetches the best orders from the Orderbook, prioritizing PYUSD orders and picking the best rates.",
+        "The Seller Agent transfers the requested INR to the merchants UPI. The response of this request is returned to the Pyrex Agent.",
     },
     {
       icon: <FaChartLine className="text-4xl text-fuchsia-400" />,
-      title: "4. Execution of the Trade",
+      title: "4. Settlement & Post-Transaction",
       description:
-        "The agent automatically executes the sale: exchanging the reserved INR for the buyer's stablecoin (e.g., PYUSD) upon fulfillment of all conditions.",
-    },
-    {
-      icon: <FaCheckCircle className="text-4xl text-teal-400" />,
-      title: "5. Settlement & Post-Transaction",
-      description:
-        "The transaction is settled, the agent receives the stablecoins, the INR payment is completed, and the **orderbook is updated** for the next request.",
+        "The Pyrex agent upon receiving the response from the Seller Agent, updates the orderbook and the status of the transaction. The transaction is settled, the agent receives the stablecoins, the INR payment is completed.",
     },
   ];
 
