@@ -33,7 +33,7 @@ async function createOrder({ value = '20.00', currency = 'USD' }: { value: strin
       purchase_units: [{ amount: { currency_code: currency, value } }],
       application_context: {
         return_url: 'https://pyrex-eth-global25.vercel.app/processing',
-        cancel_url: 'https://example.com/cancel'
+        cancel_url: 'https://pyrex-eth-global25.vercel.app/processing'
       }
     })
   });

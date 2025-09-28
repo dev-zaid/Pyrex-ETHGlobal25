@@ -66,7 +66,7 @@ async function createPayPalOrder(
       purchase_units: [{ amount: { currency_code: currency, value } }],
       application_context: {
         return_url: 'https://pyrex-eth-global25.vercel.app/processing',
-        cancel_url: 'https://example.com/cancel',
+        cancel_url: 'https://pyrex-eth-global25.vercel.app/processing',
       },
     }),
   });
