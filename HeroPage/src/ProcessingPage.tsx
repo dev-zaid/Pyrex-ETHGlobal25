@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function ProcessingPage() {
   const [isCompleted, setIsCompleted] = useState(false);
@@ -30,17 +30,17 @@ export function ProcessingPage() {
             />
           ) : (
             <div className="h-16 w-16 rounded-full bg-green-500 flex items-center justify-center">
-              <svg 
-                className="w-8 h-8 text-white" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={3} 
-                  d="M5 13l4 4L19 7" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
                 />
               </svg>
             </div>
@@ -50,7 +50,9 @@ export function ProcessingPage() {
           </span>
         </div>
         <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
-          {isCompleted ? "Payment Successfully Completed" : "Transforming Money at Lightning Speed"}
+          {isCompleted
+            ? "Payment Successfully Completed"
+            : "Transforming Money at Lightning Speed"}
         </h1>
       </section>
     </main>
