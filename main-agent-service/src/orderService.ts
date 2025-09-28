@@ -155,6 +155,38 @@ export class OrderService {
             throw commitError;
           }
 
+          // Make POST call to https://payout-api.cashfree.com/payout/v1/directTransfer
+          try {
+            // Prepare the payload for the payout API
+            console.log("Processing UPI payout to the merchant")
+            const payoutPayload = {
+              amount: matchedOffer.reserved_pyusd*88, // or the actual payout amount
+              transferId: `${orderId}-${matchedOffer.offer_id}`,
+              transferMode: "upi", // or the actual transfer mode required
+              beneDetails: {
+                name: "Vijay Sales",
+                phone: "9876543210",
+                vpa: "success@upi",
+                address1: "123, Main Street, Anytown, USA"
+              }
+            };
+
+            console.log("Payout payload: ", payoutPayload)
+
+
+            
+          } catch (payoutError) {
+            logger.error(
+              {
+                orderId,
+                offerId: matchedOffer.offer_id,
+                error: (payoutError as Error).message
+              },
+              'Error during payout via Cashfree'
+            );
+            throw payoutError;
+          }
+
           } catch (error) {
             logger.error(
               { 
